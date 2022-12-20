@@ -1,0 +1,4 @@
+multiarch.patch
+kokkos-header-time.patch
+kokkos-make-4.3.patch
+skip-pliris_vector_random.patch

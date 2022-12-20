@@ -1,0 +1,33 @@
+Trilinos for Debian
+-------------------
+
+Debian provides all primary and secondary stable Trilinos packages.
+
+Linking with Trilinos
+=====================
+
+The most straightforward way to link against a Trilinos library is to
+use its CMake interface.
+Set
+
+  FIND_PACKAGE(Trilinos REQUIRED)
+
+in your CMakeLists.txt. Typical compile-and-link statements would then
+include
+
+  INCLUDE_DIRECTORIES(${Trilinos_INCLUDE_DIRS}
+                      ${Trilinos_TPL_INCLUDE_DIRS})
+
+  LINK_DIRECTORIES(${Trilinos_LIBRARY_DIRS}
+                   ${Trilinos_TPL_LIBRARY_DIRS})
+  [...]
+  TARGET_LINK_LIBRARIES(${MY_EXECUTABLE}
+                        ${MY_LIBRARY}
+                        ${Trilinos_LIBRARIES}
+                        ${Trilinos_TPL_LIBRARIES})
+
+This will automatically pull in all the necessary libraries.
+If only a Trilinos subpackage is required, the same syntax holds true with
+"Trilinos" replaced by, e.g., "Teuchos".
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Thu, 23 Aug 2012 11:55:35 +0200

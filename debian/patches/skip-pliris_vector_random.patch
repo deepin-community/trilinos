@@ -1,0 +1,14 @@
+Description: Skip Pliris_vector_random test
+Bug-Debian: https://bugs.debian.org/966994
+Author: Graham Inggs <ginggs@debian.org>
+Last-Update: 2020-08-29
+
+--- a/packages/pliris/test/CMakeLists.txt
++++ b/packages/pliris/test/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ IF(Pliris_ENABLE_DREAL)
+-  ADD_SUBDIRECTORY(vector_random)
++#  ADD_SUBDIRECTORY(vector_random)
+ #This test seems to be hanging
+ #  ADD_SUBDIRECTORY(vector_random_fs)
+ ENDIF()

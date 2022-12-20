@@ -1,0 +1,403 @@
+trilinos (12.18.1-deepin1) unstable; urgency=medium
+
+  * Rebuild
+
+ -- Deepin Packages Builder <packages@deepin.org>  Fri, 11 Nov 2022 18:06:04 +0800
+
+trilinos (12.18.1-2) unstable; urgency=medium
+
+  * Team upload.
+  * libtrilinos-ml-dev Depends: libtrilinos-aztecoo-dev.
+    Closes: #989488.
+
+ -- Drew Parsons <dparsons@debian.org>  Sat, 05 Jun 2021 12:50:20 +0200
+
+trilinos (12.18.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop patches no longer needed and refresh remaining
+  * Switch to debhelper 13
+  * Bump Standards-Version to 4.5.0, no changes
+
+ -- Graham Inggs <ginggs@debian.org>  Sun, 15 Nov 2020 16:52:14 +0000
+
+trilinos (12.14.1-5) unstable; urgency=medium
+
+  * Skip Pliris_vector_random test (Closes: #966994)
+
+ -- Graham Inggs <ginggs@debian.org>  Sun, 30 Aug 2020 06:25:51 +0000
+
+trilinos (12.14.1-4) unstable; urgency=medium
+
+  * Make Makefile.kokkos compatible with make 4.3 (Closes: #961708)
+  * Do not run tests in parallel, thanks Sebastian Ramacher
+
+ -- Graham Inggs <ginggs@debian.org>  Sat, 30 May 2020 11:07:32 +0000
+
+trilinos (12.14.1-3) unstable; urgency=medium
+
+  [ Graham Inggs]
+  * Limit to 2 parallel build jobs
+  * Remove temporary files after dh_install
+
+  [  Matthias Maier ]
+  * Disable failing unit tests
+  * Update maintainers in control file
+
+ -- Graham Inggs <ginggs@debian.org>  Thu, 27 Feb 2020 16:06:46 +0000
+
+trilinos (12.14.1-2) unstable; urgency=medium
+
+  [ Nico Schlömer ]
+  * Fix multi-arch issue with Kokkos
+  * Add Intrepid 2 (Closes: #944688)
+
+  [ Graham Inggs ]
+  * Add iframeResizer v2.3.1 sources to debian/missing-sources
+  * Add Breaks and Replaces on libtrilinos-muelu-dev (<< 12.14)
+    to libtrilinos-belos-dev (Closes: #944486)
+  * Double up the limit of debug information entries
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Tue, 24 Dec 2019 13:24:19 +0000
+
+trilinos (12.14.1-1) unstable; urgency=medium
+
+  * Update to 12.14.1
+  * Remove obsolete patch
+  * Update debian/watch
+  * add metadata file
+  * [23b3efc6] remove Python 2 dependency (Closes: #943292)
+  * Fix ShyLu builds (Graham Inggs)
+  * Add dependency on bc
+  * Bump standards to 4.4.1
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Sat, 02 Nov 2019 06:36:02 +0000
+
+trilinos (12.12.1-8) unstable; urgency=medium
+
+  * Switch to debhelper 12
+  * Set Rules-Requires-Root: no
+  * Update debian/watch
+  * Restrict build architectures to those that are successful
+    (Closes: #835406, #881873, #935269)
+  * Fix Phalanx tests with GCC 7.2 and re-enable them (Closes: #868523)
+  * Re-enable Isorropia, ShyLUCore and Teko tests (Closes: #848770)
+  * Bump Standards-Version to 4.4.0, no changes
+
+ -- Graham Inggs <ginggs@debian.org>  Fri, 23 Aug 2019 14:24:44 +0000
+
+trilinos (12.12.1-7) unstable; urgency=medium
+
+  * Turn debhelper up to 11
+  * Avoid multiarch conflict in libtrilinos-stokhos-dev
+
+ -- Graham Inggs <ginggs@debian.org>  Mon, 04 Feb 2019 11:02:00 +0000
+
+trilinos (12.12.1-6) unstable; urgency=medium
+
+  [ Nico Schlömer ]
+  * Update VCS links to salsa
+
+  [ Graham Inggs ]
+  * Increase Stokhos_GramSchmidtBasis_Orthog_UnitTest tolerance to
+    avoid FTBFS on ppc64el
+  * Drop trailing whitespace from debian/changelog
+  * Mark libtrilinos-stokhos-dev Multi-Arch: same in order to clear
+    Lintian dependency-is-not-multi-archified warning
+  * Bump Standards-Version to 4.3.0, no changes
+
+ -- Graham Inggs <ginggs@debian.org>  Wed, 23 Jan 2019 15:47:07 +0000
+
+trilinos (12.12.1-5) unstable; urgency=medium
+
+  * revamp list of installed packaged
+  * add scotch dependency
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Mon, 05 Feb 2018 16:01:51 +0100
+
+trilinos (12.12.1-4) unstable; urgency=medium
+
+  * disable MiniTensor and Tempus packages (Closes: #889560)
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Mon, 05 Feb 2018 09:27:46 +0100
+
+trilinos (12.12.1-3) unstable; urgency=medium
+
+  * work around upstream bug https://github.com/trilinos/Trilinos/issues/2106
+    (Closes: #882298)
+  * bump standards version to 4.1.3
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Tue, 02 Jan 2018 10:04:44 +0100
+
+trilinos (12.12.1-2) unstable; urgency=medium
+
+  * fix some Multi-Arch warnings
+  * fix breaks/replaces for kokkos-kernels/tpetra (Closes: #881881)
+  * some small linitian fixes
+  * fix typo in lintian override
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Fri, 17 Nov 2017 14:48:55 +0100
+
+trilinos (12.12.1-1) unstable; urgency=medium
+
+  [ Nico Schlömer ]
+  * version bump (12.12.1)
+  * Multi-Arch specification
+  * improvements for d/watch
+  * standards version bump (4.1.1)
+  * add new packages kokkos-kernels, trilinosss
+  * disable failing unit tests
+  * clean up patches
+  * some lintian-override.in clean up
+
+  [ Sébastien Villemot ]
+  * d/copyright: use Expat instead of MIT as short license name.
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Fri, 03 Nov 2017 08:16:34 +0000
+
+trilinos (12.10.1-4) unstable; urgency=medium
+
+  * Disable Phalanx tests (failing on some platforms), see #868523
+  * correct Trilinos version string
+  * use GitHub for watch (works around broken cert on trilinos.org)
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Sun, 16 Jul 2017 20:37:37 +0200
+
+trilinos (12.10.1-3) unstable; urgency=medium
+
+  [ Nico Schlömer ]
+  * Override some unavoidable Lintian warnings
+  * Remove Python patch (unused)
+  * Domi tests disabled (failing on some platforms)
+  * Don't install TriBits files
+
+  [ Graham Inggs ]
+  * Allow oversubscription for MPI tests (Closes: #851320)
+
+ -- Graham Inggs <ginggs@debian.org>  Tue, 24 Jan 2017 11:34:38 +0200
+
+trilinos (12.10.1-2) unstable; urgency=medium
+
+  * Update patches
+  * Disable Isorropia, ShyLUCore and Teko tests which
+    fail since the recent openmpi upload
+  * Upload source package again as it was accidentally removed,
+    see #847431
+
+ -- Graham Inggs <ginggs@debian.org>  Thu, 15 Dec 2016 16:25:37 +0200
+
+trilinos (12.10.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Graham Inggs <ginggs@debian.org>  Tue, 06 Dec 2016 15:07:29 +0200
+
+trilinos (12.8.1-2) unstable; urgency=medium
+
+  * Disable MueLu tests which fail on ppc64 and s390x
+
+ -- Graham Inggs <ginggs@debian.org>  Wed, 23 Nov 2016 13:09:32 +0200
+
+trilinos (12.8.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Enable tests for many packages
+  * Disable kokkos-32-bit.patch as it causes several tests
+    to fail on 64-bit architectures, re-opens #835406
+  * Add build-dependency on openmpi-bin and export
+    OMPI_MCA_plm_rsh_agent for compatibility with openmpi2
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Sun, 20 Nov 2016 15:49:59 +0100
+
+trilinos (12.6.4-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add myself to uploaders
+  * Enable Kokkos build on 32-bit architectures (Closes: #835406)
+
+ -- Graham Inggs <ginggs@debian.org>  Tue, 30 Aug 2016 11:46:35 +0200
+
+trilinos (12.6.3-4) unstable; urgency=medium
+
+  * Team upload
+  * Only enable Kokkos assembly functions on amd64 (Closes: #815725)
+
+ -- Graham Inggs <ginggs@debian.org>  Thu, 25 Aug 2016 12:33:23 +0200
+
+trilinos (12.6.3-3) unstable; urgency=medium
+
+  * Team upload
+  * Use DEB_HOST_GNU_TYPE instead of DEB_HOST_MULTIARCH for BUILDDIR
+  * Rebuild with GCC 6
+
+ -- Graham Inggs <ginggs@debian.org>  Wed, 24 Aug 2016 14:01:43 +0200
+
+trilinos (12.6.3-2) unstable; urgency=medium
+
+  * Standards-Version: 3.9.8
+  * Migrate from trilinos-dbg to ddebs, bump debhelper build-dependency
+  * remove binutils/libiberty dependency (Closes: #830681)
+  * Update Vcs-Git
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Thu, 21 Jul 2016 16:43:57 +0200
+
+trilinos (12.6.3-1) unstable; urgency=medium
+
+  * import new upstream release
+  * remove support for SuperLU
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Wed, 01 Jun 2016 15:46:58 +0200
+
+trilinos (12.4.2-2) unstable; urgency=medium
+
+  * add missing file to d/copyright
+  * move doc related rules to *-indep targets (Closes: #816100)
+
+ -- Felix Salfelder <felix@salfelder.org>  Tue, 01 Mar 2016 12:39:54 +0200
+
+trilinos (12.4.2-1) unstable; urgency=medium
+
+  [Nico Schlömer]
+  * import new upstream release (Closes: #704782)
+    - remove libtrilinos_ prefixes
+    - clear patches
+  * use local mathjax instead of cdn
+
+  [Felix Salfelder]
+  * build separate library packages
+  * some lintian overrides
+  * workaround (embed) Trilinos_Version.h
+  * build documentation
+
+ -- Nico Schlömer <nico.schloemer@gmail.com>  Tue, 24 Nov 2015 10:39:12 +0100
+
+trilinos (10.4.0.dfsg-1) unstable; urgency=low
+
+  [Christophe Prud'homme]
+  * New upstream release
+  * debian/control: update Standard-Version to 3.9.1
+
+  [Johannes Ring]
+  * Update patches for 10.4.0 release.
+  * debian/rules: Remove DEB_MAKE_BUILD_TARGET.
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Fri, 13 Aug 2010 17:18:35 +0200
+
+trilinos (10.0.4.dfsg-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Don't hardcode name of the default make target (closes: #577388).
+
+ -- Jakub Wilk <jwilk@debian.org>  Wed, 19 May 2010 13:59:28 +0200
+
+trilinos (10.0.4.dfsg-1) unstable; urgency=low
+
+  [Christophe Prud'homme]
+  * New upstream release
+  * debian/control: updated Standard-Version to 3.8.3 (no changes)
+
+  [Johannes Ring]
+  * debian/patches: Update patches for 10.0.4 release.
+  * debian/control:
+    - Add XS-Python-Version field to source package and
+      XB-Python-Version field to binary package python-pytrilinos.
+    - Add python-numpy to Depends for binary package python-pytrilinos.
+  * debian/rules: Fix issue with PyTrilinos and Python 2.6.
+  * Switch from python-support to python-central.
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Sun, 03 Jan 2010 08:25:23 +0100
+
+trilinos (10.0.3.dfsg-2) unstable; urgency=low
+
+  [Christophe Prud'homme]
+  * debian/rules: enable noxlapack
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Mon, 21 Dec 2009 11:04:12 +0100
+
+trilinos (10.0.3.dfsg-1) unstable; urgency=low
+
+  [Christophe Prud'homme]
+  * New upstream release
+
+  [Johannes Ring]
+  * debian/patches/libname.patch: Add prefix 'libtrilinos_' to all
+    libraries.
+  * debian/patches/soname.patch: Add soversion to libraries.
+  * debian/watch: Update download URL.
+  * debian/control:
+    - Remove python-numeric from Build-Depends (virtual package).
+    - Remove automake and autotools from Build-Depends and add cmake to
+      reflect switch to CMake.
+    - Add python-support to Build-Depends.
+  * debian/rules:
+    - Cleanup and updates for switch to CMake.
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Sun, 13 Dec 2009 12:53:22 +0100
+
+trilinos (9.0.3.dfsg-2) unstable; urgency=low
+
+  * debian/rules: fixed lintian warning (package-installs-python-pyc)
+  * debian/control: updated Standard-=Version to 3.8.2 (no change)
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Tue, 14 Jul 2009 08:55:52 +0200
+
+trilinos (9.0.3.dfsg-1) unstable; urgency=low
+
+  [Christophe Prud'homme]
+  * New upstream release
+  * python-pytrilinos: fix lintian warning package-installs-python-pyc
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Fri, 03 Jul 2009 11:26:41 +0200
+
+trilinos (9.0.2.dfsg-5) unstable; urgency=low
+
+  [Fabrice Coutadeur]
+  * Adapt package to python2.6 (LP: #386625):
+    - debian/python-pytrilinos.install: changed python2.5 to python*
+    - debian/control: changed build dependency from python2.5-dev to python-dev
+    - debian/rules: changed reference to python2.5 to python2.6
+    - debian/patches/python_2.6.patch: add --install-layout=deb to setup.py
+      call in Makefile.in and Makefile.am for Packages/PyTrilinos/shared,
+      packages/PyTrilinos/src and packages/Sundance/python/src
+
+  [Christophe Prud'homme]
+  * debian/rules: fix some lintian warnings
+  * Bug fix: "trilinos FTBFS with python2.6", thanks to Fabrice Coutadeur
+    (Closes: #535145).
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Fri, 03 Jul 2009 07:32:36 +0200
+
+trilinos (9.0.2.dfsg-4) unstable; urgency=low
+
+  * debian/rules: added sacado to TRILINOS_PACKAGES and
+    TRILINOS_PACKAGES_LIBS, thanks to Adam for pointing this out.
+  * debian/libtrilinos-dev.install: move /usr/include/*.h to
+    /usr/include/trilinos, thanks to Adam for pointing this out.
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Fri, 22 May 2009 12:09:26 +0200
+
+trilinos (9.0.2.dfsg-3) unstable; urgency=low
+
+  * Added patch to fix gcc 4.4 FTBS
+  * Bug fix: "missing #include", thanks to Martin Michlmayr (Closes:
+    #527210).
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Tue, 12 May 2009 21:02:58 +0200
+
+trilinos (9.0.2.dfsg-2) unstable; urgency=low
+
+  * debian/rules: enable sacado
+  * Bug fix: "Missing Sacado", thanks to Adam C Powell IV (Closes:
+    #527835).
+  * Bug fix: "error when trying to install together", thanks to Ralf
+    Treinen (Closes: #526992).
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Sat, 09 May 2009 14:19:14 +0200
+
+trilinos (9.0.2.dfsg-1) unstable; urgency=low
+
+  * Initial release Closes: #362293
+  * as per discussion with debian ftpmaster, renamed all libraries using
+    prefix libtrilinos_, hence improving the library naming in trilinos
+
+ -- Christophe Prud'homme <prudhomm@debian.org>  Thu, 19 Mar 2009 10:50:42 +0100

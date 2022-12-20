@@ -1,0 +1,10 @@
+Trilinos for Debian
+-------------------
+
+The sources are fetched from the public Git repository of Trilinos, cf.
+<https://github.com/trilinos/trilinos>.
+
+Most changes previously made through the old Debian package
+http://packages.qa.debian.org/t/trilinos.html are now included upstream.
+Notably, this does not include the library rename from "teuchos" to
+"trilinos_teuchos" (and likewise for all subpackages).

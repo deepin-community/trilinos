@@ -1,0 +1,10 @@
+#ifndef TRILINOS_VERSION_H
+# define TRILINOS_VERSION_H
+# define TRILINOS_MAJOR_VERSION %V
+# define TRILINOS_MAJOR_MINOR_VERSION %MV
+# define TRILINOS_VERSION_STRING "%MV"
+#elif ( TRILINOS_MAJOR_VERSION != %V ) \
+   || ( TRILINOS_MAJOR_MINOR_VERSION != %MV )
+// don't know what to do. should not happen
+# warning "trilinos version mismatch."
+#endif /* TRILINOS_VERSION_H */

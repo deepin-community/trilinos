@@ -1,0 +1,309 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# dirnames deviate from package names...
+LIB_PACKAGES = \
+    amesos \
+    amesos2 \
+    anasazi \
+    aztecoo \
+    belos \
+    epetra \
+    epetraext \
+    galeri \
+    globipack \
+    ifpack \
+    ifpack2 \
+    intrepid \
+    intrepid2 \
+    isorropia \
+    kokkos \
+    kokkos-kernels \
+    komplex \
+    ml \
+    moertel \
+    muelu \
+    nox \
+    optipack \
+    pamgen \
+    phalanx \
+    pike \
+    piro \
+    pliris \
+    rol \
+    rtop \
+    rythmos \
+    sacado \
+    shards \
+    shylu \
+    stokhos \
+    stratimikos \
+    teko \
+    teuchos \
+    thyra \
+    tpetra \
+    trilinoscouplings \
+    triutils \
+    xpetra \
+    zoltan \
+    zoltan2
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+export OMPI_MCA_plm_rsh_agent=/bin/false
+export OMPI_MCA_rmaps_base_oversubscribe=1
+
+DEB_HOST_MULTIARCH?=$(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_GNU_TYPE?=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+DOC_TRUE=
+DOC_FALSE=
+ifneq (,$(findstring nodoc,$(DEB_BUILD_OPTIONS)))
+   DOC_TRUE=\#
+else
+   DOC_FALSE=\#
+endif
+
+%:
+	dh $@ --max-parallel=2
+
+clean:
+	rm -f *-stamp
+	rm -rf debian/tmp_*
+	rm -rf packages/*/doc/html
+	rm -rf packages/*/browser/doc/html
+	rm -rf packages/rtop/src/*/doc/html
+	dh clean
+
+override_dh_auto_configure: configure-stamp
+
+
+# The below configuration selectively enables packages instead of first
+# enabling all via
+# ```
+# -DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON \
+# -DTrilinos_ENABLE_SECONDARY_TESTED_CODE:BOOL=ON \
+# ```
+# and then selectively disabling them. This approach is more robust with
+# Trilinos updates which sometimes silently enable new packages by default,
+# resulting in broken CMake export config files if they are not at the same
+# time enabled in Debian.
+
+configure-stamp:
+	dh_auto_configure -- \
+   -DCMAKE_C_COMPILER=mpicc \
+   -DCMAKE_CXX_COMPILER=mpicxx \
+   -DCMAKE_Fortran_COMPILER=mpif90 \
+   -DBUILD_SHARED_LIBS:BOOL=ON \
+   -DCMAKE_SKIP_INSTALL_RPATH:BOOL=ON \
+   \
+   -DTrilinos_LIBRARY_NAME_PREFIX:STRING="trilinos_" \
+   -DTrilinos_INSTALL_INCLUDE_DIR:PATH=include/trilinos/ \
+   -DTrilinos_INSTALL_TriBITS:BOOL=OFF \
+   -DTrilinos_USE_GNUINSTALLDIRS:BOOL=ON \
+   -DTrilinos_ENABLE_DEVELOPMENT_MODE:BOOL=OFF \
+   -DTrilinos_ASSERT_MISSING_PACKAGES:BOOL=OFF \
+   -DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON \
+   -DTrilinos_ENABLE_EXPORT_MAKEFILES:BOOL=OFF \
+   -DTrilinos_ENABLE_EXAMPLES:BOOL=OFF \
+   -DTrilinos_ENABLE_TESTS:BOOL=ON \
+   \
+   -DTrilinos_ENABLE_Amesos:BOOL=ON \
+   -DTrilinos_ENABLE_Amesos2:BOOL=ON \
+     -DAmesos2_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Anasazi:BOOL=ON \
+     -DAnasazi_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_AztecOO:BOOL=ON \
+   -DTrilinos_ENABLE_Belos:BOOL=ON \
+     -DBelos_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Epetra:BOOL=ON \
+     -DEpetra_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_EpetraExt:BOOL=ON \
+   -DTrilinos_ENABLE_Galeri:BOOL=ON \
+   -DTrilinos_ENABLE_GlobiPack:BOOL=ON \
+   -DTrilinos_ENABLE_Ifpack:BOOL=ON \
+     -DIfpack_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Ifpack2:BOOL=ON \
+   -DTrilinos_ENABLE_Intrepid:BOOL=ON \
+   -DTrilinos_ENABLE_Intrepid2:BOOL=ON \
+   -DTrilinos_ENABLE_Isorropia:BOOL=ON \
+   -DTrilinos_ENABLE_Kokkos:BOOL=ON \
+   -DTrilinos_ENABLE_KokkosKernels:BOOL=ON \
+   -DTrilinos_ENABLE_Komplex:BOOL=ON \
+   -DTrilinos_ENABLE_ML:BOOL=ON \
+   -DTrilinos_ENABLE_Moertel:BOOL=ON \
+   -DTrilinos_ENABLE_MueLu:BOOL=ON \
+     -DMueLu_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_NOX:BOOL=ON \
+     -DNOX_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_OptiPack:BOOL=ON \
+   -DTrilinos_ENABLE_Pamgen:BOOL=ON \
+   -DTrilinos_ENABLE_Phalanx:BOOL=ON \
+   -DTrilinos_ENABLE_Pike:BOOL=ON \
+   -DTrilinos_ENABLE_Piro:BOOL=ON \
+     -DPiro_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Pliris:BOOL=ON \
+   -DTrilinos_ENABLE_ROL:BOOL=ON \
+   -DTrilinos_ENABLE_RTOp:BOOL=ON \
+   -DTrilinos_ENABLE_Rythmos:BOOL=ON \
+   -DTrilinos_ENABLE_Sacado:BOOL=ON \
+   -DTrilinos_ENABLE_Shards:BOOL=ON \
+   -DTrilinos_ENABLE_ShyLU:BOOL=ON \
+   -DTrilinos_ENABLE_Stokhos:BOOL=ON \
+   -DTrilinos_ENABLE_Stratimikos:BOOL=ON \
+     -DStratimikos_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Teko:BOOL=ON \
+   -DTrilinos_ENABLE_Teuchos:BOOL=ON \
+     -DTeuchos_ENABLE_TESTS:BOOL=OFF \
+     -DTeuchosComm_ENABLE_TESTS:BOOL=OFF \
+     -DTeuchosCore_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Thyra:BOOL=ON \
+   -DTrilinos_ENABLE_Tpetra:BOOL=ON \
+   -DTrilinos_ENABLE_TrilinosCouplings:BOOL=ON \
+   -DTrilinos_ENABLE_Triutils:BOOL=ON \
+   -DTrilinos_ENABLE_Xpetra:BOOL=ON \
+     -DXpetra_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Zoltan:BOOL=ON \
+     -DZoltan_ENABLE_TESTS:BOOL=OFF \
+   -DTrilinos_ENABLE_Zoltan2:BOOL=ON \
+     -DZoltan2_ENABLE_TESTS:BOOL=OFF \
+   \
+   -DTrilinos_ENABLE_Gtest:BOOL=OFF \
+   -DTrilinos_ENABLE_MiniTensor:BOOL=OFF \
+   -DTrilinos_ENABLE_MOOCHO:BOOL=OFF \
+   -DTrilinos_ENABLE_SEACAS:BOOL=OFF \
+   -DTrilinos_ENABLE_STK:BOOL=OFF \
+   -DTrilinos_ENABLE_Tempus:BOOL=OFF \
+   \
+   -DTPL_ENABLE_BinUtils:BOOL=OFF \
+   -DTPL_ENABLE_Boost:BOOL=ON \
+   -DTPL_ENABLE_HDF5:BOOL=ON \
+     -DHDF5_INCLUDE_DIRS:PATH=/usr/include/hdf5/openmpi/ \
+     -DHDF5_LIBRARY_DIRS:PATH=/usr/lib/$(DEB_HOST_MULTIARCH)/hdf5/openmpi/ \
+   -DTPL_ENABLE_Matio:BOOL=OFF \
+   -DTPL_ENABLE_MATLAB:BOOL=OFF \
+   -DTPL_ENABLE_MPI:BOOL=ON \
+   -DTPL_ENABLE_MUMPS:BOOL=ON \
+   -DTPL_ENABLE_Netcdf:BOOL=OFF \
+   -DTPL_ENABLE_ParMETIS:BOOL=OFF \
+   -DTPL_ENABLE_Scotch:BOOL=ON \
+     -DScotch_INCLUDE_DIRS:PATH=/usr/include/scotch/ \
+   -DTPL_ENABLE_SuperLU:BOOL=OFF \
+   -DTPL_ENABLE_TBB:BOOL=ON \
+   -DTPL_ENABLE_X11:BOOL=OFF \
+   -DTPL_ENABLE_Zlib:BOOL=ON
+	touch $@
+
+BUILDDIR=$(CURDIR)/obj-$(DEB_HOST_GNU_TYPE)
+
+doc_build-stamp: $(DOC_TRUE)$(LIB_PACKAGES:%=%_doc-stamp)
+	touch $@
+
+# ignoring return code. some parts just fail!
+$(LIB_PACKAGES:%=%_doc-stamp): %_doc-stamp:
+	-cd packages/$*/doc && ./build_docs
+	touch $@
+
+override_dh_auto_install-indep: auto_install-indep-stamp
+override_dh_auto_install-arch: auto_install-arch-stamp
+
+auto_install-indep-stamp: doc_build-stamp
+	mkdir -p $(CURDIR)/debian/tmp_trilinos-doc/usr/share/doc/trilinos;
+	for i in $(LIB_PACKAGES); do \
+	  echo "cp -r packages/$$i/doc/html/ $(CURDIR)/debian/tmp_trilinos-doc/usr/share/doc/trilinos/$$i"; \
+	  cp -r packages/$$i/doc/html/ $(CURDIR)/debian/tmp_trilinos-doc/usr/share/doc/trilinos/$$i || :; \
+	done
+	touch $@
+
+auto_install-arch-stamp:
+	for i in $(LIB_PACKAGES); do \
+     if [ -d $(BUILDDIR)/packages/$$i ]; then \
+	    $(MAKE) -C $(BUILDDIR)/packages/$$i install DESTDIR=$(CURDIR)/debian/tmp_$$i || exit 1; \
+	  else \
+	    echo "WARNING: $@, no $$i has been built" >&2; \
+       sleep 3; \
+	  fi; \
+	done
+	$(MAKE) -C $(BUILDDIR)/packages/shylu/shylu_dd install DESTDIR=$(CURDIR)/debian/tmp_shylu || exit 1
+	$(MAKE) -C $(BUILDDIR)/packages/shylu/shylu_node install DESTDIR=$(CURDIR)/debian/tmp_shylu || exit 1
+	$(MAKE) -C $(BUILDDIR)/packages/common/auxiliarySoftware/SuiteSparse/ install DESTDIR=$(CURDIR)/debian/tmp_trilinosss || exit 1
+	$(MAKE) -C $(BUILDDIR) install/local DESTDIR=$(CURDIR)/debian/tmp_trilinos-dev
+	touch $@
+
+V = $(shell grep -Po 'Trilinos_MAJOR_VERSION \K[\d\.]*' Version.cmake)
+MV = $(shell grep -Po 'Trilinos_MAJOR_MINOR_VERSION \K[\d\.]*' Version.cmake)
+
+SOVERSION=$(V)
+
+debian/Trilinos_version.h: debian/Trilinos_version.h.in auto_install-arch-stamp
+	test -f $(TV)
+	sed -e 's/%V/$(V)/' \
+	    -e 's/%MV/$(MV)/' $< > $@
+
+override_dh_auto_test:
+	dh_auto_test --no-parallel
+
+LO_DIR = /usr/share/lintian/overrides
+
+override_dh_install-indep: install-indep-stamp
+install-indep-stamp: auto_install-indep-stamp
+	@for i in $(LIB_PACKAGES); do \
+	  echo "dh_install --sourcedir=debian/tmp_trilinos-doc -ptrilinos-doc --autodest usr/share/ || exit 1;" \
+	  dh_install --sourcedir=debian/tmp_trilinos-doc -ptrilinos-doc --autodest usr/share/ || exit 1; \
+	done
+	dh_install --sourcedir=debian/tmp_trilinos-doc -ptrilinos-doc --autodest usr/share/doc
+	if [ ! -d debian/trilinos-doc ]; then \
+		echo it should really be there...; \
+	fi
+	find debian/trilinos-doc -type f -name *.html -print0 | xargs -0 \
+		sed -i -e 's_http\(s\|\)://cdn.mathjax.org/mathjax/latest_/usr/share/javascript/mathjax_g' \
+		       -e 's#jquery\.js#/usr/share/javascript/jquery/jquery.js#'; \
+	find debian/trilinos-doc/usr/share -name jquery.js -delete; \
+	touch $@
+
+override_dh_install-arch: install-arch-stamp
+install-arch-stamp: SHELL=/bin/bash
+install-arch-stamp: auto_install-arch-stamp debian/Trilinos_version.h
+	@for i in $(LIB_PACKAGES) trilinosss; do \
+     if [ $$i = trilinosss -o -d $(BUILDDIR)/packages/$$i ]; then \
+	    echo "dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$${i/2/2-}"$(SOVERSION)" usr/lib/*/*.so.*"; \
+	    dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$${i/2/2-}"$(SOVERSION)" usr/lib/*/*.so.* || exit 1; \
+	    echo "dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$$i-dev --autodest usr/include usr/lib/*/*.so usr/lib/*/cmake"; \
+	    dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$$i-dev --autodest usr/include usr/lib/*/*.so usr/lib/*/cmake || exit 1; \
+	    if grep -q "^libtrilinos-$$i\>" debian/lintian-override.in; then \
+	      install -d debian/libtrilinos-$${i/2/2-}$(SOVERSION)$(LO_DIR); \
+	      echo creating $(LO_DIR)/libtrilinos-$${i/2/2-}$(SOVERSION); \
+	      grep "^libtrilinos-$${i/2/2-}%V\>" debian/lintian-override.in |\
+	        sed -e 's/%V/$(SOVERSION)/g' >\
+	        debian/libtrilinos-$${i/2/2-}$(SOVERSION)$(LO_DIR)/libtrilinos-$${i/2/2-}$(SOVERSION); \
+	    fi; rm -rf debian/tmp_$$i/ \
+	  else \
+	    echo "WARNING: $@, no $$i has been built" >&2; \
+	  fi; \
+	done
+	# just check. should not find anything.
+	-find debian/lib*-dev -name Trilinos_version.h -print -printf 'BUG, leftover %p'
+	for i in `grep -l Trilinos_version\.h debian/lib*-dev/usr/include/trilinos/*ersion*`; do \
+		echo fixing header $$i; \
+		sed -e '/Trilinos_version/,$$d' $$i > debian/htmp; \
+		cat debian/Trilinos_version.h >> debian/htmp; \
+		sed -e '1,/Trilinos_version/d' $$i >> debian/htmp; \
+		mv debian/htmp $$i; \
+	done
+	dh_install --sourcedir=debian/tmp_trilinos-dev -ptrilinos-dev --autodest usr/include usr/lib/*/cmake -V foo=bar
+	touch $@
+
+override_dh_prep:
+	dh_prep
+	echo mydevpackages=$(LIB_PACKAGES:%=libtrilinos-%-dev,) > debian/trilinos-all-dev.substvars
+
+override_dh_dwz:
+	# Double up the limit of debug information entries:
+	dh_dwz -- -L 100000000
+
+.PHONY: override_dh_auto_configure override_dh_auto_install \
+	override_dh_install-arch \
+	override_dh_install-indep

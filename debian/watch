@@ -1,0 +1,3 @@
+version=4
+opts=uversionmangle=s/-/./g,filenamemangle=s/.+\/trilinos-release-@ANY_VERSION@\.tar\.gz/trilinos-$1\.tar\.gz/ \
+https://github.com/trilinos/Trilinos/tags .*/trilinos-release-@ANY_VERSION@\.tar\.gz

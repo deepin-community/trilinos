@@ -1,0 +1,27 @@
+Description: Remove date/time from headers
+ This conflicts with reproducible builds and Multi-Arch.
+Author: Nico Schlömer <nico.schloemer@gmail.com>
+Last-Update: 2019-11-04
+
+--- a/packages/kokkos-kernels/Makefile.kokkos-kernels
++++ b/packages/kokkos-kernels/Makefile.kokkos-kernels
+@@ -69,7 +69,7 @@
+ 
+ tmp := $(shell echo "/* ---------------------------------------------" > KokkosKernels_config.tmp)
+ tmp := $(shell echo "Makefile constructed configuration:" >> KokkosKernels_config.tmp)
+-tmp := $(shell date >> KokkosKernels_config.tmp)
++# tmp := $(shell date >> KokkosKernels_config.tmp)
+ tmp := $(shell echo "----------------------------------------------*/" >> KokkosKernels_config.tmp)
+ tmp := $(shell echo "\#ifndef KOKKOSKERNELS_CONFIG_H_" >> KokkosKernels_config.tmp)
+ tmp := $(shell echo "\#define KOKKOSKERNELS_CONFIG_H_" >> KokkosKernels_config.tmp)
+--- a/packages/kokkos/Makefile.kokkos
++++ b/packages/kokkos/Makefile.kokkos
+@@ -411,7 +411,7 @@
+ # Do not append first line
+ tmp := $(shell echo "/* ---------------------------------------------" > KokkosCore_config.tmp)
+ tmp := $(call kokkos_append_header,"Makefile constructed configuration:")
+-tmp := $(call kokkos_append_header,"$(shell date)")
++# tmp := $(call kokkos_append_header,"$(shell date)")
+ tmp := $(call kokkos_append_header,"----------------------------------------------*/")
+ 
+ tmp := $(call kokkos_append_header,'\#if !defined(KOKKOS_MACROS_HPP) || defined(KOKKOS_CORE_CONFIG_H)')

@@ -1,0 +1,23 @@
+# allow some libNAME*V.so in libNAMEV package (is there another way?)
+libpliris%V binary: package-name-doesnt-match-sonames libdpliris%V
+libseacas%V binary: package-name-doesnt-match-sonames libseacas-aprepro-lib%V libseacas-chaco%V libseacas-exodus%V libseacas-exodus-for%V libseacas-ioex%V libseacas-iogn%V libseacas-iohb%V libseacas-ionit%V libseacas-iopg%V libseacas-ioss%V libseacas-iotr%V libseacas-mapvarlib%V libseacas-nemesis%V libseacas-supes%V libseacas-suplib%V
+libstk%V binary: package-name-doesnt-match-sonames libstk-adapt%V libstk-algsup%V libstk-expreval%V libstk-io%V libstk-io-util%V libstk-linsys%V libstk-mesh-base%V libstk-mesh-fem%V libstk-percept%V libstk-rebalance%V libstk-rebalance-utils%V libstk-search%V libstk-search-util%V libstk-util-diag%V libstk-util-env%V libstk-util-parallel%V libstk-util-unit-test-support%V libstk-util-util%V
+libsundance%V binary: package-name-doesnt-match-sonames libsundanceCore%V libsundanceInterop%V libsundancePdeopt%V libsundancePlaya%V libsundanceStdFwk%V libsundanceStdMesh%V libsundanceUtils%V
+libteuchos%V binary: package-name-doesnt-match-sonames libteuchoscomm%V libteuchoscore%V libteuchosnumerics%V libteuchosparameterlist%V libteuchosremainder%V
+libthyra%V binary: package-name-doesnt-match-sonames libthyracore%V libthyraepetra%V libthyraepetraext%V libthyratpetra%V
+libtrilinos-pike%V binary: package-name-doesnt-match-sonames libtrilinos-pike-blackbox%V
+libtrilinos-stk%V binary: package-name-doesnt-match-sonames libtrilinos-stk-io%V libtrilinos-stk-io-util%V libtrilinos-stk-mesh-base%V libtrilinos-stk-topology%V libtrilinos-stk-util-diag%V libtrilinos-stk-util-env%V libtrilinos-stk-util-parallel%V libtrilinos-stk-util-registry%V libtrilinos-stk-util-use-cases%V libtrilinos-stk-util-util%V
+libtrilinos-pliris%V binary: package-name-doesnt-match-sonames libtrilinos-dpliris%V
+libtrilinos-thyra%V binary: package-name-doesnt-match-sonames libtrilinos-thyracore%V libtrilinos-thyraepetra%V libtrilinos-thyraepetraext%V libtrilinos-thyratpetra%V
+libtrilinos-seacas%V binary: package-name-doesnt-match-sonames libtrilinos-Ioex%V libtrilinos-Ioexo-fac%V libtrilinos-Iofx%V libtrilinos-Iogn%V libtrilinos-Iohb%V libtrilinos-Ionit%V libtrilinos-Iopg%V libtrilinos-Ioss%V libtrilinos-Iotr%V libtrilinos-aprepro-lib%V libtrilinos-chaco%V libtrilinos-exodus%V libtrilinos-exodus-for%V libtrilinos-mapvarlib%V libtrilinos-nemesis%V libtrilinos-supes%V libtrilinos-suplib%V
+libtrilinos-kokkos%V binary: package-name-doesnt-match-sonames libtrilinos-kokkosalgorithms%V libtrilinos-kokkoscontainers%V libtrilinos-kokkoscore%V
+libtrilinos-kokkos-kernels%V binary: package-name-doesnt-match-sonames libtrilinos-kokkoskernels%V
+libtrilinos-teuchos%V binary: package-name-doesnt-match-sonames libtrilinos-teuchoscomm%V libtrilinos-teuchoscore%V libtrilinos-teuchoskokkoscomm%V libtrilinos-teuchoskokkoscompat%V libtrilinos-teuchosnumerics%V libtrilinos-teuchosparameterlist%V libtrilinos-teuchosremainder%V
+libtrilinos-galeri%V binary: package-name-doesnt-match-sonames libtrilinos-galeri-epetra%V libtrilinos-galeri-xpetra%V
+
+libtrilinos-galeri%V: shared-lib-without-dependency-information usr/lib/*/libtrilinos_galeri-xpetra.so.%V.*
+libtrilinos-teuchos%V: shared-lib-without-dependency-information usr/lib/*/libtrilinos_teuchoskokkoscomm.so.%V.*
+libtrilinos-stokhos%V: shared-lib-without-dependency-information usr/lib/*/libtrilinos_stokhos_amesos2.so.%V.*
+libtrilinos-kokkos%V: shared-lib-without-dependency-information usr/lib/*/libtrilinos_kokkosalgorithms.so.%V.*
+libtrilinos-tpetra%V: shared-lib-without-dependency-information usr/lib/*/libtrilinos_tpetraclassic.so.%V.*
+libtrilinos-tpetra%V: shared-lib-without-dependency-information usr/lib/*/libtrilinos_tpetraclassiclinalg.so.%V.*
