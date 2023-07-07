@@ -1,3 +1,10 @@
+trilinos (12.18.1-deepin2) unstable; urgency=medium
+
+  * Remove Python < 2.3 Code.
+    Code like True = 1 is now causing SyntaxError on Python 3
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Fri, 07 Jul 2023 13:46:12 +0800
+
 trilinos (12.18.1-deepin1) unstable; urgency=medium
 
   * Rebuild

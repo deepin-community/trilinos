@@ -1,0 +1,19 @@
+Description: Remove Python < 2.3 Code
+ Code like True = 1 is now causing SyntaxError on Python 3.
+Author: Tianyu Chen <sweetyfish@deepin.org>
+Origin: vendor
+Forwarded: not-needed
+Last-Update: 2023-07-07
+---
+--- a/commonTools/test/utilities/compareTestOutput
++++ b/commonTools/test/utilities/compareTestOutput
+@@ -13,9 +13,6 @@
+ import getopt
+ 
+ version = sys.version_info[0] + sys.version_info[1]/10.0
+-if version < 2.3:
+-    True = 1
+-    False = 0
+ 
+ 
+ class CompareRule:
