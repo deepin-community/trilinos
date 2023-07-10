@@ -11,7 +11,6 @@ LIB_PACKAGES = \
     epetra \
     epetraext \
     galeri \
-    globipack \
     ifpack \
     ifpack2 \
     intrepid \
@@ -24,7 +23,6 @@ LIB_PACKAGES = \
     moertel \
     muelu \
     nox \
-    optipack \
     pamgen \
     phalanx \
     pike \
@@ -68,7 +66,7 @@ else
 endif
 
 %:
-	dh $@ --max-parallel=2
+	dh $@
 
 clean:
 	rm -f *-stamp
@@ -123,7 +121,6 @@ configure-stamp:
      -DEpetra_ENABLE_TESTS:BOOL=OFF \
    -DTrilinos_ENABLE_EpetraExt:BOOL=ON \
    -DTrilinos_ENABLE_Galeri:BOOL=ON \
-   -DTrilinos_ENABLE_GlobiPack:BOOL=ON \
    -DTrilinos_ENABLE_Ifpack:BOOL=ON \
      -DIfpack_ENABLE_TESTS:BOOL=OFF \
    -DTrilinos_ENABLE_Ifpack2:BOOL=ON \
@@ -131,7 +128,10 @@ configure-stamp:
    -DTrilinos_ENABLE_Intrepid2:BOOL=ON \
    -DTrilinos_ENABLE_Isorropia:BOOL=ON \
    -DTrilinos_ENABLE_Kokkos:BOOL=ON \
+     -DKokkosCore_ENABLE_TESTS:BOOL=OFF \
+     -DKokkos_ENABLE_TESTS:BOOL=OFF \
    -DTrilinos_ENABLE_KokkosKernels:BOOL=ON \
+     -DKokkosKernels_ENABLE_TESTS:BOOL=OFF \
    -DTrilinos_ENABLE_Komplex:BOOL=ON \
    -DTrilinos_ENABLE_ML:BOOL=ON \
    -DTrilinos_ENABLE_Moertel:BOOL=ON \
@@ -139,7 +139,6 @@ configure-stamp:
      -DMueLu_ENABLE_TESTS:BOOL=OFF \
    -DTrilinos_ENABLE_NOX:BOOL=ON \
      -DNOX_ENABLE_TESTS:BOOL=OFF \
-   -DTrilinos_ENABLE_OptiPack:BOOL=ON \
    -DTrilinos_ENABLE_Pamgen:BOOL=ON \
    -DTrilinos_ENABLE_Phalanx:BOOL=ON \
    -DTrilinos_ENABLE_Pike:BOOL=ON \
@@ -192,7 +191,7 @@ configure-stamp:
    -DTPL_ENABLE_Scotch:BOOL=ON \
      -DScotch_INCLUDE_DIRS:PATH=/usr/include/scotch/ \
    -DTPL_ENABLE_SuperLU:BOOL=OFF \
-   -DTPL_ENABLE_TBB:BOOL=ON \
+   -DTPL_ENABLE_TBB:BOOL=OFF \
    -DTPL_ENABLE_X11:BOOL=OFF \
    -DTPL_ENABLE_Zlib:BOOL=ON
 	touch $@
@@ -229,14 +228,21 @@ auto_install-arch-stamp:
 	done
 	$(MAKE) -C $(BUILDDIR)/packages/shylu/shylu_dd install DESTDIR=$(CURDIR)/debian/tmp_shylu || exit 1
 	$(MAKE) -C $(BUILDDIR)/packages/shylu/shylu_node install DESTDIR=$(CURDIR)/debian/tmp_shylu || exit 1
+	$(MAKE) -C $(BUILDDIR)/packages/zoltan2/core install DESTDIR=$(CURDIR)/debian/tmp_zoltan2 || exit 1
+	$(MAKE) -C $(BUILDDIR)/packages/zoltan2/sphynx install DESTDIR=$(CURDIR)/debian/tmp_zoltan2 || exit 1
 	$(MAKE) -C $(BUILDDIR)/packages/common/auxiliarySoftware/SuiteSparse/ install DESTDIR=$(CURDIR)/debian/tmp_trilinosss || exit 1
-	$(MAKE) -C $(BUILDDIR) install/local DESTDIR=$(CURDIR)/debian/tmp_trilinos-dev
+	$(MAKE) -C $(BUILDDIR)/add_project_install_commands install DESTDIR=$(CURDIR)/debian/tmp_trilinos-dev || exit 1
+	$(MAKE) -C $(BUILDDIR) install/local DESTDIR=$(CURDIR)/debian/tmp_trilinos-dev || exit 1
 	touch $@
 
-V = $(shell grep -Po 'Trilinos_MAJOR_VERSION \K[\d\.]*' Version.cmake)
+# major.minor: 13.2
+VF = $(shell grep -Po 'Trilinos_VERSION \K[\d\.]*' Version.cmake)
+# major: 13
+V  = $(shell grep -Po 'Trilinos_MAJOR_VERSION \K[\d\.]*' Version.cmake)
+# major * 10000 + minor * 100: 130200
 MV = $(shell grep -Po 'Trilinos_MAJOR_MINOR_VERSION \K[\d\.]*' Version.cmake)
 
-SOVERSION=$(V)
+SOVERSION=$(VF)
 
 debian/Trilinos_version.h: debian/Trilinos_version.h.in auto_install-arch-stamp
 	test -f $(TV)
@@ -244,7 +250,7 @@ debian/Trilinos_version.h: debian/Trilinos_version.h.in auto_install-arch-stamp
 	    -e 's/%MV/$(MV)/' $< > $@
 
 override_dh_auto_test:
-	dh_auto_test --no-parallel
+	echo nope
 
 LO_DIR = /usr/share/lintian/overrides
 
@@ -269,16 +275,16 @@ install-arch-stamp: SHELL=/bin/bash
 install-arch-stamp: auto_install-arch-stamp debian/Trilinos_version.h
 	@for i in $(LIB_PACKAGES) trilinosss; do \
      if [ $$i = trilinosss -o -d $(BUILDDIR)/packages/$$i ]; then \
-	    echo "dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$${i/2/2-}"$(SOVERSION)" usr/lib/*/*.so.*"; \
-	    dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$${i/2/2-}"$(SOVERSION)" usr/lib/*/*.so.* || exit 1; \
+	    echo "dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$$i-"$(SOVERSION)##" usr/lib/*/*.so.*"; \
+	    dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$$i-"$(SOVERSION)" usr/lib/*/*.so.* || exit 1; \
 	    echo "dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$$i-dev --autodest usr/include usr/lib/*/*.so usr/lib/*/cmake"; \
 	    dh_install --sourcedir=debian/tmp_$$i -plibtrilinos-$$i-dev --autodest usr/include usr/lib/*/*.so usr/lib/*/cmake || exit 1; \
 	    if grep -q "^libtrilinos-$$i\>" debian/lintian-override.in; then \
-	      install -d debian/libtrilinos-$${i/2/2-}$(SOVERSION)$(LO_DIR); \
-	      echo creating $(LO_DIR)/libtrilinos-$${i/2/2-}$(SOVERSION); \
-	      grep "^libtrilinos-$${i/2/2-}%V\>" debian/lintian-override.in |\
+	      install -d debian/libtrilinos-$$i-$(SOVERSION)$(LO_DIR); \
+	      echo creating $(LO_DIR)/libtrilinos-$$i-$(SOVERSION); \
+	      grep "^libtrilinos-$$i-%V\>" debian/lintian-override.in |\
 	        sed -e 's/%V/$(SOVERSION)/g' >\
-	        debian/libtrilinos-$${i/2/2-}$(SOVERSION)$(LO_DIR)/libtrilinos-$${i/2/2-}$(SOVERSION); \
+	        debian/libtrilinos-$$i-$(SOVERSION)$(LO_DIR)/libtrilinos-$$i-$(SOVERSION); \
 	    fi; rm -rf debian/tmp_$$i/ \
 	  else \
 	    echo "WARNING: $@, no $$i has been built" >&2; \

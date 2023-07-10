@@ -21,7 +21,6 @@
 #include <stk_mesh/base/Field.hpp>
 
 #include <stk_mesh/base/CoordinateSystems.hpp>
-#include <stk_mesh/base/Stencils.hpp>
 #include <stk_mesh/base/TopologyDimensions.hpp>
 
 #include <stk_mesh/base/Part.hpp>
@@ -45,7 +44,7 @@
     public:
 
       //typedef double Point[3];
-      typedef boost::array<double,3> Point;
+      typedef std::array<double,3> Point;
       typedef stk::mesh::EntityIdVector QuadIds;
       typedef stk::mesh::EntityIdVector TriIds;
 

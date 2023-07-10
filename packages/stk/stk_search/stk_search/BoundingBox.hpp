@@ -36,8 +36,11 @@
 #ifndef STK_SEARCH_BOUNDINGBOX_HPP
 #define STK_SEARCH_BOUNDINGBOX_HPP
 
+#include "Kokkos_Macros.hpp"
+#include <array>
 #include <stk_math/StkVector.hpp>
 #include <stk_search/Box.hpp>
+#include <stk_search/Plane.hpp>
 #include <stk_search/Point.hpp>
 #include <stk_search/Sphere.hpp>
 #include <stk_math/StkMath.hpp>          // for stk::math::max, stk::math::min
@@ -207,18 +210,26 @@ template <typename T1, typename T2>
 inline bool intersects(Sphere<T1> const& a, Box<T2> const& b)
 {
   Point<T1> const& ac   = a.center();
-  Point<T2> const& bmin = b.min_corner();
-  Point<T2> const& bmax = b.max_corner();
+  const T1         ar   = a.radius(); 
+  T1 distToBoxSquared = 0.0;
+  for(unsigned idir=0; idir<3; ++idir) {
+      const T2 boxMin = b.min_corner()[idir];
+      const T2 boxMax = b.max_corner()[idir];
+      const T1 sphereCenter = ac[idir];
 
-  const T1 r2 = a.radius() * a.radius();
-
-  // check that the nearest point in the bounding box is within the sphere
-  T1 dmin = 0;
-  for( int i = 0; i < 3; ++i ) {
-    if( ac[i] < bmin[i] ) dmin += (ac[i]-bmin[i])*(ac[i]-bmin[i]);
-    else if( ac[i] > bmax[i] ) dmin += (ac[i]-bmax[i])*(ac[i]-bmax[i]);
+      if(       sphereCenter + ar < boxMin) {
+          return false;
+      } else if(sphereCenter - ar > boxMax) {
+          return false;
+      } else if(sphereCenter      < boxMin) {
+          T1 dist = boxMin-sphereCenter;
+          distToBoxSquared += dist*dist;
+      } else if(sphereCenter      > boxMax) {
+          T1 dist = sphereCenter-boxMax;
+          distToBoxSquared += dist*dist;
+      }
   }
-  return dmin <= r2;
+   return (distToBoxSquared <= ar*ar);
 }
 
 // intersects: Box,Sphere
@@ -228,7 +239,8 @@ inline bool intersects(Box<T1> const& a, Sphere<T2> const& b)
 
 // intersects: Box,Box
 template <typename T1, typename T2>
-inline bool intersects(Box<T1> const& a, Box<T2> const& b)
+KOKKOS_FORCEINLINE_FUNCTION
+bool intersects(Box<T1> const& a, Box<T2> const& b)
 {
   Point<T1> const& amin = a.min_corner();
   Point<T1> const& amax = a.max_corner();
@@ -241,6 +253,40 @@ inline bool intersects(Box<T1> const& a, Box<T2> const& b)
         || (amax[1] < bmin[1]) || (bmax[1] < amin[1])
         || (amax[2] < bmin[2]) || (bmax[2] < amin[2]));
 
+}
+
+// intersects: Plane,Box
+template <typename T1, typename T2>
+inline bool intersects(Plane<T1> const& p, Box<T2> const& b)
+{
+
+  std::array<T2,6> points = {b.get_x_min(), b.get_x_max(), b.get_y_min(), b.get_y_max(), b.get_z_min(), b.get_z_max()};
+  int previousWhichSide = p.WhichSide(Point<T2>(points[0], points[0], points[0]));
+  for (int x=0; x<2; ++x){
+    for (int y=0; y<2; ++y){
+      for (int z=0; z<2; ++z){
+        int whichSide = p.WhichSide(Point<T2>(points[x], points[y], points[z]));
+        if (whichSide != previousWhichSide){
+          return true;
+        }
+        else if(whichSide == 0){
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+template <typename T1, typename T2>
+inline bool intersects(Box<T1> const& b, Plane<T2> const& p)
+{
+  return intersects(p,b);
+}
+
+template <typename T, typename U>
+inline void scale_by(Point<T> &p, U const& mult_fact, U const& add_fact = 0)
+{
 }
 
 template <typename T, typename U>

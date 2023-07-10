@@ -62,11 +62,6 @@ public:
   /** \brief  Ordinal to identify the ghosting subset */
   unsigned ordinal() const { return m_ordinal ; }
 
-  /** \brief  Bulk data synchronization count when this
-   *          ghosting object was last modified.
-   */
-  size_t synchronized_count() const { return m_sync_count ; }
-
   /** \brief  Locally owned entities ghosted on other processors.
    *
    *          This generated communication list for sending updates
@@ -79,7 +74,8 @@ public:
    *          This generated communication list for receiving updates
    *          is sorted by entity key.
    */
-  void receive_list( std::vector<EntityKey> & ) const ;
+  void receive_list( std::vector<EntityKey> & keys) const ;
+  void receive_list( std::vector<Entity> & entities) const ;
 
   /** \brief  Print the details of this object for debugging
    */
@@ -96,11 +92,10 @@ private:
 
   BulkData                & m_mesh ; ///< Owner
   const std::string         m_name ; ///< Name for printing purposes
-  size_t                    m_sync_count ; ///< Bulk data sync count
   unsigned                  m_ordinal ;
 
-  Ghosting( BulkData & M , const std::string & n , unsigned ord , size_t count )
-    : m_mesh( M ) , m_name( n ), m_sync_count( count ), m_ordinal( ord ) {}
+  Ghosting( BulkData & M , const std::string & n , unsigned ord )
+    : m_mesh( M ) , m_name( n ), m_ordinal( ord ) {}
 
   ~Ghosting() {}
 

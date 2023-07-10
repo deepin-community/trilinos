@@ -94,6 +94,10 @@ IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/ch_vwgt2)
   ADD_SUBDIRECTORY(ch_vwgt2)
 ENDIF()
 
+IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/ch_7944)
+  ADD_SUBDIRECTORY(ch_7944)
+ENDIF()
+
 IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hg_cage10)
   ADD_SUBDIRECTORY(hg_cage10)
 ENDIF()
@@ -128,6 +132,7 @@ ENDIF()
 TRIBITS_COPY_FILES_TO_BINARY_DIR(zoltan_zdrive_copy
   SOURCE_FILES zdrive.exe
   SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/../src/driver
+  CATEGORIES BASIC PERFORMANCE
 )
 
 IF (${PACKAGE_NAME}_ENABLE_CPPDRIVER)
@@ -147,5 +152,6 @@ ENDIF()
 # Command that copies test perl script to the test directory.
 TRIBITS_COPY_FILES_TO_BINARY_DIR(zoltan_ctest_zoltan_copy
   SOURCE_FILES ctest_zoltan.pl ctest_zoltan_purify.sh
+  CATEGORIES BASIC PERFORMANCE
 )
 

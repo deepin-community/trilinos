@@ -32,24 +32,14 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 
 
-#include <math.h>
 #include <cmath>
 #include <ctime>
-#include <math.h>       //Needed for erf and erfc on solaris.
 
 #include <stk_expreval/Function.hpp>
 #include <stk_expreval/Constants.hpp>
 
-#include <boost/math/distributions.hpp>
-
 namespace stk {
 namespace expreval {
-
-  namespace bmp  = boost::math::policies;
-
-  using weibull_dist = boost::math::weibull_distribution< double, boost::math::policies::policy< bmp::overflow_error<bmp::ignore_error> > >;
-  using gamma_dist   = boost::math::gamma_distribution< double, bmp::policy< bmp::overflow_error<bmp::ignore_error> > >;
-  using normal_dist  = boost::math::normal_distribution< double, bmp::policy< bmp::overflow_error<bmp::ignore_error> > >;
 
 extern "C" {
   typedef double (*CExtern0)();
@@ -57,6 +47,7 @@ extern "C" {
   typedef double (*CExtern2)(double, double);
   typedef double (*CExtern3)(double, double, double);
   typedef double (*CExtern4)(double, double, double, double);
+  typedef double (*CExtern5)(double, double, double, double, double);
   typedef double (*CExtern8)(double, double, double, double, double, double, double, double);
 }
 
@@ -196,6 +187,32 @@ private:
 };
 
 template <>
+class CFunction<CExtern5> : public CFunctionBase
+{
+public:
+  typedef CExtern5 Signature;
+
+  explicit CFunction<Signature>(Signature function)
+    : CFunctionBase(5),
+      m_function(function)
+  {}
+
+  virtual ~CFunction()
+  {}
+
+  virtual double operator()(int argc, const double *argv)
+  {
+#ifndef NDEBUG
+    if (argc != getArgCount()) { throw std::runtime_error("Argument count mismatch, function should have 5 arguments"); }
+#endif
+    return (*m_function)(argv[0], argv[1], argv[2], argv[3], argv[4]);
+  }
+
+private:
+  Signature m_function;
+};
+
+template <>
 class CFunction<CExtern8> : public CFunctionBase
 {
 public:
@@ -226,6 +243,7 @@ typedef CFunction<CExtern1> CFunction1;
 typedef CFunction<CExtern2> CFunction2;
 typedef CFunction<CExtern3> CFunction3;
 typedef CFunction<CExtern4> CFunction4;
+typedef CFunction<CExtern5> CFunction5;
 typedef CFunction<CExtern8> CFunction8;
 
 extern "C" {
@@ -421,6 +439,18 @@ extern "C" {
     }
   }
 
+  double point_2(double x, double y, double r, double w)
+  {
+    const double ri = std::sqrt(x*x + y*y);
+    return 1.0 - cosine_ramp3(ri, r-0.5*w, r+0.5*w);
+  }
+
+  double point_3(double x, double y, double z, double r, double w)
+  {
+    const double ri = std::sqrt(x*x + y*y + z*z);
+    return 1.0 - cosine_ramp3(ri, r-0.5*w, r+0.5*w);
+  }
+
   double cosine_ramp1(double t) 
   {
     return cosine_ramp3(t, 0.0, 1.0);
@@ -434,33 +464,32 @@ extern "C" {
   /// Weibull distribution probability distribution function.
   double weibull_pdf(double x, double shape, double scale)
   {
-    weibull_dist weibull1(shape, scale);
-    return boost::math::pdf(weibull1, x);
+    return (x >= 0) ? (shape/scale)*std::pow(x/scale, shape-1)*std::exp(-std::pow(x/scale, shape)) : 0;
   }
 
   /// Normal (Gaussian) distribution probability distribution function.
   double normal_pdf(double x, double mean, double standard_deviation)
   {
-    normal_dist normal1(mean, standard_deviation);
-    return boost::math::pdf(normal1, x);
+    return std::exp(-(x-mean)*(x-mean)/(2.0*standard_deviation*standard_deviation)) /
+           std::sqrt(2.0*pi()*standard_deviation*standard_deviation);
   }
 
   /// Exponential Uniform distribution probability distribution function
   double exponential_pdf(double x, double beta)
   { 
-    return std::exp(-x/beta)/beta; 
+    return (x >= 0.0) ? std::exp(-x/beta)/beta : 0.0;
   }
 
   /// Log Uniform distribution probability distribution function
   double log_uniform_pdf(double x, double lower_range, double upper_range) 
   { 
-    return 1.0/(std::log(upper_range) - std::log(lower_range))/x; 
+    return (x >= lower_range && x <= upper_range) ? 1.0/((std::log(upper_range) - std::log(lower_range))*x) : 0.0;
   }
 
   /// Gamma continuous probability distribution function.
   double gamma_pdf(double x, double shape, double scale)
   {
-    return boost::math::pdf(gamma_dist(shape,scale), x);
+    return (x >= 0) ? 1/(std::tgamma(shape)*std::pow(scale, shape))*std::pow(x, shape-1)*std::exp(-x/scale) : 0;
   }
 
   /// Returns -1 or 1 depending on whether x is negative or positive.
@@ -518,8 +547,8 @@ CFunctionMap::CFunctionMap()
   (*this).emplace("log10",           new CFunction1(std::log10));
   (*this).emplace("pow",             new CFunction2(std::pow));
   (*this).emplace("sqrt",            new CFunction1(std::sqrt));
-  (*this).emplace("erfc",            new CFunction1(erfc));
-  (*this).emplace("erf",             new CFunction1(erf));
+  (*this).emplace("erfc",            new CFunction1(std::erfc));
+  (*this).emplace("erf",             new CFunction1(std::erf));
 
   (*this).emplace("acos",            new CFunction1(std::acos));
   (*this).emplace("asin",            new CFunction1(std::asin));
@@ -555,6 +584,9 @@ CFunctionMap::CFunctionMap()
   (*this).emplace("rad",             new CFunction1(rad));
   (*this).emplace("recttopola",      new CFunction2(recttopola));
   (*this).emplace("recttopolr",      new CFunction2(recttopolr));
+
+  (*this).emplace("point2d",         new CFunction4(point_2));
+  (*this).emplace("point3d",         new CFunction5(point_3));
 
   (*this).emplace("cos_ramp",        new CFunction1(cosine_ramp1));
   (*this).emplace("cos_ramp",        new CFunction2(cosine_ramp2));

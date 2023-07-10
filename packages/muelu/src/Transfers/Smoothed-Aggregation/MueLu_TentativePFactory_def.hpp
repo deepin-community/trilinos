@@ -80,6 +80,7 @@ namespace MueLu {
 #define SET_VALID_ENTRY(name) validParamList->setEntry(name, MasterList::getEntry(name))
     SET_VALID_ENTRY("tentative: calculate qr");
     SET_VALID_ENTRY("tentative: build coarse coordinates");
+    SET_VALID_ENTRY("tentative: constant column sums");
 #undef  SET_VALID_ENTRY
     validParamList->set< std::string >("Nullspace name", "Nullspace", "Name for the input nullspace");
 
@@ -272,11 +273,21 @@ namespace MueLu {
 
     const GO     numAggs   = aggregates->GetNumAggregates();
     const size_t NSDim     = fineNullspace->getNumVectors();
+    ArrayRCP<LO> aggSizes  = aggregates->ComputeAggregateSizes();
+
+
+    // Sanity checking
+    const ParameterList& pL = GetParameterList();
+    const bool &doQRStep = pL.get<bool>("tentative: calculate qr");
+    const bool &constantColSums = pL.get<bool>("tentative: constant column sums");
+
+    TEUCHOS_TEST_FOR_EXCEPTION(doQRStep && constantColSums,Exceptions::RuntimeError,
+                               "MueLu::TentativePFactory::MakeTentative: cannot use 'constant column sums' and 'calculate qr' at the same time");
 
     // Aggregates map is based on the amalgamated column map
     // We can skip global-to-local conversion if LIDs in row map are
     // same as LIDs in column map
-    bool goodMap = isGoodMap(*rowMap, *colMap);
+    bool goodMap = MueLu::Utilities<SC,LO,GO,NO>::MapsAreNested(*rowMap, *colMap);
 
     // Create a lookup table to determine the rows (fine DOFs) that belong to a given aggregate.
     // aggStart is a pointer into aggToRowMapLO
@@ -297,9 +308,6 @@ namespace MueLu {
 
     coarseNullspace = MultiVectorFactory::Build(coarseMap, NSDim);
 
-    const ParameterList& pL = GetParameterList();
-    const bool &doQRStep = pL.get<bool>("tentative: calculate qr");
-
     // Pull out the nullspace vectors so that we can have random access.
     ArrayRCP<ArrayRCP<const SC> > fineNS  (NSDim);
     ArrayRCP<ArrayRCP<SC> >       coarseNS(NSDim);
@@ -312,7 +320,7 @@ namespace MueLu {
     size_t nnzEstimate = numRows * NSDim;
 
     // Time to construct the matrix and fill in the values
-    Ptentative = rcp(new CrsMatrixWrap(rowMap, coarseMap, 0, Xpetra::StaticProfile));
+    Ptentative = rcp(new CrsMatrixWrap(rowMap, coarseMap, 0));
     RCP<CrsMatrix> PtentCrs   = rcp_dynamic_cast<CrsMatrixWrap>(Ptentative)->getCrsMatrix();
 
     ArrayRCP<size_t>  iaPtent;
@@ -367,7 +375,7 @@ namespace MueLu {
               bIsZeroNSColumn = false;
 
           TEUCHOS_TEST_FOR_EXCEPTION(bIsZeroNSColumn == true, Exceptions::RuntimeError,
-                                     "MueLu::TentativePFactory::MakeTentative: fine level NS part has a zero column");
+                                     "MueLu::TentativePFactory::MakeTentative: fine level NS part has a zero column in NS column " << j);
         }
 
         // Calculate QR decomposition (standard)
@@ -469,7 +477,7 @@ namespace MueLu {
     } else {
       GetOStream(Runtime1) << "TentativePFactory : bypassing local QR phase" << std::endl;
       if (NSDim>1)
-        GetOStream(Warnings0) << "TentativePFactor : for nontrivial nullspace, this may degrade performance" << std::endl;
+        GetOStream(Warnings0) << "TentativePFactory : for nontrivial nullspace, this may degrade performance" << std::endl;
       /////////////////////////////
       //      "no-QR" option     //
       /////////////////////////////
@@ -496,7 +504,8 @@ namespace MueLu {
 
             for (size_t k = 0, lnnz = 0; k < NSDim; k++) {
               // Skip zeros (there may be plenty of them, i.e., NSDim > 1 or boundary conditions)
-              const SC qr_jk = fineNS[k][aggToRowMapLO[aggStart[agg]+j]];
+              SC qr_jk = fineNS[k][aggToRowMapLO[aggStart[agg]+j]];
+              if(constantColSums) qr_jk = qr_jk / (double)aggSizes[agg];
               if (qr_jk != zero) {
                 ja [rowStart+lnnz] = offset + k;
                 val[rowStart+lnnz] = qr_jk;
@@ -518,9 +527,10 @@ namespace MueLu {
 
             const size_t rowStart = ia[localRow];
 
-            for (size_t k = 0, lnnz = 0; k < NSDim; k++) {
+            for (size_t k = 0, lnnz = 0; k < NSDim; ++k) {
               // Skip zeros (there may be plenty of them, i.e., NSDim > 1 or boundary conditions)
-              const SC qr_jk = fineNS[k][rowMap->getLocalElement(aggToRowMapGO[aggStart[agg]+j])];
+              SC qr_jk = fineNS[k][rowMap->getLocalElement(aggToRowMapGO[aggStart[agg]+j])];
+              if(constantColSums) qr_jk = qr_jk / (double)aggSizes[agg];
               if (qr_jk != zero) {
                 ja [rowStart+lnnz] = offset + k;
                 val[rowStart+lnnz] = qr_jk;
@@ -709,7 +719,7 @@ namespace MueLu {
 
     RCP<CrsMatrix> PtentCrs;
 
-    RCP<CrsMatrixWrap> PtentCrsWrap = rcp(new CrsMatrixWrap(rowMapForPtent, NSDim, Xpetra::StaticProfile));
+    RCP<CrsMatrixWrap> PtentCrsWrap = rcp(new CrsMatrixWrap(rowMapForPtent, NSDim));
     PtentCrs   = PtentCrsWrap->getCrsMatrix();
     Ptentative = PtentCrsWrap;
 
@@ -949,22 +959,7 @@ namespace MueLu {
     Ptentative->fillComplete(coarseMap, A->getDomainMap());
   }
 
-  template <class Scalar,class LocalOrdinal, class GlobalOrdinal, class Node>
-  bool TentativePFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::isGoodMap(const Map& rowMap, const Map& colMap) const {
-    ArrayView<const GO> rowElements = rowMap.getNodeElementList();
-    ArrayView<const GO> colElements = colMap.getNodeElementList();
 
-    const size_t numElements = rowElements.size();
-
-    bool goodMap = true;
-    for (size_t i = 0; i < numElements; i++)
-      if (rowElements[i] != colElements[i]) {
-        goodMap = false;
-        break;
-      }
-
-    return goodMap;
-  }
 
 } //namespace MueLu
 

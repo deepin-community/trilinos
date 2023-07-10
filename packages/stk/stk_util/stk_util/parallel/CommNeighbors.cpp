@@ -32,32 +32,22 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 
 
-#include <stdlib.h>
-#include <stdexcept>
-#include <sstream>
-#include <iostream>
-#include <cstring>
-#include <vector>
-#include <algorithm>
+#include "stk_util/parallel/CommNeighbors.hpp"
+#include "stk_util/util/ReportHandler.hpp"  // for ThrowAssertMsg
+#include "stk_util/util/SortAndUnique.hpp"  // for sort_and_unique
+#include <cstddef>                          // for size_t
+#include <cstring>                          // for memcpy
+#include <iostream>                         // for operator<<, basic_ostream::operator<<, basic_...
+#include <memory>                           // for allocator_traits<>::value_type
+#include <stdexcept>                        // for range_error
+#include <vector>                           // for vector
 
-#include <stk_util/util/SortAndUnique.hpp>
-#include <stk_util/environment/CPUTime.hpp>
-#include <stk_util/parallel/ParallelComm.hpp>
-#include <stk_util/parallel/CommNeighbors.hpp>
 
 namespace stk {
 
 //-----------------------------------------------------------------------
 
 #if defined( STK_HAS_MPI )
-
-void CommNeighbors::rank_error( const char * method , int p ) const
-{
-  std::ostringstream os ;
-  os << "stk::CommNeighbors::" << method
-     << "(" << p << ") ERROR: Not in [0:" << m_size << ")" ;
-  throw std::range_error( os.str() );
-}
 
 //----------------------------------------------------------------------
 
@@ -106,16 +96,11 @@ CommNeighbors::CommNeighbors( stk::ParallelMachine comm, const std::vector<int>&
 {
   m_send.resize(m_size);
   m_recv.resize(m_size);
-#ifdef OMPI_MAJOR_VERSION
-#if OMPI_MAJOR_VERSION < 2
-//if open-mpi version 1.10, MPI_Neighbor_* functions can't handle
-//empty send/recv lists.
   if (neighbor_procs.empty()) {
+    //at least some MPI_Neighbor_* implementations can't handle empty neighbor lists.
     m_send_procs.push_back(m_rank);
     m_recv_procs.push_back(m_rank);
   }
-#endif
-#endif
   stk::util::sort_and_unique(m_send_procs);
   stk::util::sort_and_unique(m_recv_procs);
 
@@ -146,13 +131,9 @@ CommNeighbors::CommNeighbors( stk::ParallelMachine comm, const std::vector<int>&
   std::vector<int> symmNeighbors = m_send_procs;
   symmNeighbors.insert(symmNeighbors.end(), m_recv_procs.begin(), m_recv_procs.end());
   stk::util::sort_and_unique(symmNeighbors);
-#ifdef OMPI_MAJOR_VERSION
-#if OMPI_MAJOR_VERSION < 2
   if (symmNeighbors.empty()) {
     symmNeighbors.push_back(m_rank);
   }
-#endif
-#endif
   m_send_procs = symmNeighbors;
   m_recv_procs = symmNeighbors;
 
@@ -333,6 +314,13 @@ void CommNeighbors::reset_buffers() {
   for(auto&& r : m_recv) {
     r.resize(0);
   }
+}
+
+void CommNeighbors::swap_send_recv()
+{
+  m_send.swap(m_recv);
+  m_send_data.swap(m_recv_data);
+  m_send_procs.swap(m_recv_procs);
 }
 
 #endif

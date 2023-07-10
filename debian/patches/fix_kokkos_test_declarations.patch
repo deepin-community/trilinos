@@ -1,0 +1,44 @@
+Description: remove some kokkos test declarations that cause configure failures
+Author: Matthias Maier <tamiko+DEBIAN@kyomu.43-1.org>
+Last-Update: 2021-11-24
+
+diff --git a/packages/kokkos/cmake/kokkos_tribits.cmake b/packages/kokkos/cmake/kokkos_tribits.cmake
+index afa036066a..edce81ad07 100644
+--- a/packages/kokkos/cmake/kokkos_tribits.cmake
++++ b/packages/kokkos/cmake/kokkos_tribits.cmake
+@@ -152,18 +152,6 @@ FUNCTION(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
+         IF(DEFINED PARSE_ARGS)
+             STRING(REPLACE ";" " " PARSE_ARGS "${PARSE_ARGS}")
+         ENDIF()
+-        TRIBITS_ADD_EXECUTABLE_AND_TEST(
+-            ${ROOT_NAME}
+-            SOURCES ${PARSE_SOURCES}
+-            TESTONLYLIBS kokkos_gtest
+-            NUM_MPI_PROCS 1
+-            COMM serial mpi
+-            ARGS ${PARSE_ARGS}
+-            CATEGORIES ${PARSE_CATEGORIES}
+-            SOURCES ${PARSE_SOURCES}
+-            FAIL_REGULAR_EXPRESSION "  FAILED  "
+-            ARGS ${PARSE_ARGS}
+-        )
+     ELSE()
+         KOKKOS_ADD_TEST_EXECUTABLE(${ROOT_NAME}
+             SOURCES ${PARSE_SOURCES}
+
+diff --git a/packages/kokkos/algorithms/CMakeLists.txt b/packages/kokkos/algorithms/CMakeLists.txt
+index 4df76a1dbb..0097d0a8bc 100644
+--- a/packages/kokkos/algorithms/CMakeLists.txt
++++ b/packages/kokkos/algorithms/CMakeLists.txt
+@@ -5,11 +5,6 @@ KOKKOS_SUBPACKAGE(Algorithms)
+ IF (NOT Kokkos_INSTALL_TESTING)
+   ADD_SUBDIRECTORY(src)
+ ENDIF()
+-IF(NOT (KOKKOS_ENABLE_OPENMPTARGET
+-        AND (KOKKOS_CXX_COMPILER_ID STREQUAL PGI OR
+-             KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)))
+-  KOKKOS_ADD_TEST_DIRECTORIES(unit_tests)
+-ENDIF()
+ 
+ KOKKOS_SUBPACKAGE_POSTPROCESS()
+ 

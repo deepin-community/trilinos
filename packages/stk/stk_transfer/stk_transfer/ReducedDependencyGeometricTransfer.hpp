@@ -50,8 +50,6 @@
 #include <stk_transfer/GeometricTransferImpl.hpp>
 #include <stk_transfer/TransferBase.hpp>
 
-#include<impl/Kokkos_Timer.hpp>
-
 
 namespace stk {
 namespace transfer {
@@ -97,12 +95,12 @@ public :
 
   enum {Dimension = 3};
 
-  ReducedDependencyGeometricTransfer(std::shared_ptr<MeshA> &mesha,
-                    std::shared_ptr<MeshB> &meshb,
+  ReducedDependencyGeometricTransfer(std::shared_ptr<MeshA> mesha,
+                    std::shared_ptr<MeshB> meshb,
                     const std::string &name,
                     stk::ParallelMachine pm,
                     const double expansion_factor = 1.5,
-                    const stk::search::SearchMethod search_method = stk::search::BOOST_RTREE);
+                    const stk::search::SearchMethod search_method = stk::search::KDTREE);
   virtual ~ReducedDependencyGeometricTransfer(){};
   void coarse_search() override;
   void communication() override;
@@ -176,12 +174,12 @@ void create_offset_and_num_key(const std::vector<int> & uniqueProcVec,
 {
   for(unsigned iproc = 0; iproc < uniqueProcVec.size(); ++iproc)
   {
-    const unsigned procid = uniqueProcVec[iproc];
+    const int procid = uniqueProcVec[iproc];
     int offset = -1;
     int numKeys = 0;
     for(int jj = 0; jj < (int) entity_key_proc.size(); ++jj)
     {
-      if(entity_key_proc[jj].proc() == procid)
+      if(static_cast<int>(entity_key_proc[jj].proc()) == procid)
       {
         if(offset < 0)
           offset = jj;
@@ -293,8 +291,8 @@ void do_communication(const ReducedDependencyCommData & comm_data, const MeshAVe
 
 
 template <class INTERPOLATE> ReducedDependencyGeometricTransfer<INTERPOLATE>::ReducedDependencyGeometricTransfer
-(std::shared_ptr<MeshA> &mesha,
- std::shared_ptr<MeshB> &meshb,
+(std::shared_ptr<MeshA> mesha,
+ std::shared_ptr<MeshB> meshb,
  const std::string        &name,
  stk::ParallelMachine pm,
  const double              expansion_factor,

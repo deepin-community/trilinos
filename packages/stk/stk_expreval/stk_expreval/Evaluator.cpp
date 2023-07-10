@@ -76,7 +76,8 @@ struct expression_evaluation_exception : public virtual std::exception
 struct expression_undefined_exception : public virtual std::exception
 {
   virtual const char* what() const throw() {
-    std::string rtnMsg = "Found undefined function with name: " + m_msg + " and " + std::to_string(m_numArgs)  + " argument(s)";
+    static std::string rtnMsg;
+    rtnMsg = "Found undefined function with name: " + m_msg + " and " + std::to_string(m_numArgs)  + " argument(s)";
     return rtnMsg.c_str();
   }
 
@@ -102,7 +103,7 @@ enum Opcode {
   OPCODE_STATEMENT,
   OPCODE_ARGUMENT,
 
-  OPCODE_TIERNARY,
+  OPCODE_TERNARY,
 
 
 
@@ -176,7 +177,7 @@ public:
 
     struct _variable
     {
-      Variable *variable;
+      Variable* variable;
     } variable;
 
     struct _function
@@ -263,7 +264,7 @@ Node::eval() const
     double right = m_right->eval();
     return (left != s_false) || (right != s_false) ? s_true : s_false;
   }
-  case OPCODE_TIERNARY:
+  case OPCODE_TERNARY:
     return m_left->eval() != s_false ? m_right->eval() : m_other->eval();
 
   case OPCODE_UNARY_MINUS:
@@ -321,7 +322,7 @@ Node *parseFactor(Eval &eval, LexemVector::const_iterator from, LexemVector::con
 Node *parseRelation(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator factor, LexemVector::const_iterator to);
 Node *parseLogical(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator factor, LexemVector::const_iterator to);
 Node *parseUnary(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator unary, LexemVector::const_iterator to);
-Node *parseTiernary(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator question, LexemVector::const_iterator colon, LexemVector::const_iterator to);
+Node *parseTernary(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator question, LexemVector::const_iterator colon, LexemVector::const_iterator to);
 Node *parseFunction(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator lparen, LexemVector::const_iterator rparen, LexemVector::const_iterator to);
 Node *parseFunctionArg(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator to);
 Node *parseRValue(Eval &eval, LexemVector::const_iterator from, LexemVector::const_iterator to);
@@ -387,7 +388,7 @@ parseExpression(
 
   LexemVector::const_iterator relation_it = to;         // Last relational at paren_level 0 for relational operator
   LexemVector::const_iterator logical_it = to;          // Last logical at paren_level 0 for logical operator
-  LexemVector::const_iterator question_it = to;         // Last tiernary at paren_level 0 for tiernary operator
+  LexemVector::const_iterator question_it = to;         // Last ternary at paren_level 0 for ternary operator
   LexemVector::const_iterator colon_it = to;
   LexemVector::const_iterator unary_it = to;            // First +,- at plevel 0 for positive,negative
   LexemVector::const_iterator last_unary_it = to;       // Last +,- found at plevel for for positive,negative
@@ -516,9 +517,9 @@ parseExpression(
   if (assign_it != to)
     return parseAssign(eval, from, assign_it, to);
 
-  // Tiernary operator
+  // Ternary operator
   if (question_it != to || colon_it != to)
-    return parseTiernary(eval, from, question_it, colon_it, to);
+    return parseTernary(eval, from, question_it, colon_it, to);
 
   // Logical
   if (logical_it != to)
@@ -719,7 +720,7 @@ parseLogical(
 
 
 Node *
-parseTiernary(
+parseTernary(
   Eval & eval,
   LexemVector::const_iterator from,
   LexemVector::const_iterator question_it,
@@ -729,13 +730,13 @@ parseTiernary(
   if (question_it == to || colon_it == to)
     throw std::runtime_error("syntax error parsing ?: operator");
 
-  Node *tiernary = eval.newNode(OPCODE_TIERNARY);
+  Node *ternary = eval.newNode(OPCODE_TERNARY);
 
-  tiernary->m_left = parseExpression(eval, from, question_it);
-  tiernary->m_right = parseExpression(eval, question_it + 1, colon_it);
-  tiernary->m_other = parseExpression(eval, colon_it + 1, to);
+  ternary->m_left = parseExpression(eval, from, question_it);
+  ternary->m_right = parseExpression(eval, question_it + 1, colon_it);
+  ternary->m_other = parseExpression(eval, colon_it + 1, to);
 
-  return tiernary;
+  return ternary;
 }
 
 
@@ -948,10 +949,7 @@ parseRValue(
 
 } // namespace Parser
 
-Eval::Eval(
-  VariableMap::Resolver & resolver,
-  const std::string & expression,
-  Variable::ArrayOffset arrayOffsetType)
+Eval::Eval(VariableMap::Resolver & resolver, const std::string & expression, Variable::ArrayOffset arrayOffsetType)
   : m_variableMap(resolver),
     m_expression(expression),
     m_syntaxStatus(false),
@@ -960,9 +958,7 @@ Eval::Eval(
     m_arrayOffsetType(arrayOffsetType)
 {}
 
-Eval::Eval(
-  const std::string & expression,
-  Variable::ArrayOffset arrayOffsetType)
+Eval::Eval(const std::string & expression, Variable::ArrayOffset arrayOffsetType)
   : m_variableMap(VariableMap::getDefaultResolver()),
     m_expression(expression),
     m_syntaxStatus(false),
@@ -971,29 +967,24 @@ Eval::Eval(
     m_arrayOffsetType(arrayOffsetType)
 {}
 
-Eval::~Eval()
-{
-  auto& myThreadData = m_nodes.getMyThreadEntry();
-  for (auto& node : myThreadData) {
-    delete node;
-  }
-}
+Eval::Eval(const Eval& otherEval) 
+  : m_variableMap(otherEval.m_variableMap),
+    m_expression(otherEval.m_expression),
+    m_syntaxStatus(otherEval.m_syntaxStatus),
+    m_parseStatus(otherEval.m_parseStatus),
+    m_headNode(otherEval.m_headNode),
+    m_nodes(otherEval.m_nodes),
+    m_arrayOffsetType(otherEval.m_arrayOffsetType)
+{} 
 
-Node *
-Eval::newNode(
-  int           opcode)
-{
-  auto& myThreadData = m_nodes.getMyThreadEntry();
-  myThreadData.push_back(new Node(static_cast<Opcode>(opcode), this));
-  return myThreadData.back();
-}
+Eval::~Eval() 
+{}
 
-std::size_t concurrency() {
-#if defined( _OPENMP )
-  return omp_get_max_threads();
-#else
-  return 1;
-#endif
+Node*
+Eval::newNode(int opcode)
+{
+  m_nodes.push_back(std::make_shared<Node>(static_cast<Opcode>(opcode), this));
+  return m_nodes.back().get();
 }
 
 void
@@ -1002,23 +993,16 @@ Eval::syntax()
   m_syntaxStatus = false;
   m_parseStatus = false;
 
-#ifdef _OPENMP
-  std::size_t N = concurrency();
-#pragma omp parallel for
-  for(std::size_t j = 0; j < N; ++j)
-#endif
-  {
-    try {
-      // Validate the characters
-      LexemVector lex_vector = tokenize(m_expression);
+  try {
+    // Validate the characters
+    LexemVector lex_vector = tokenize(m_expression);
 
-      // Call the multiparse routine to parse subexpressions
-      m_headNode.getMyThreadEntry() = Parser::parseStatements(*this, lex_vector.begin(), lex_vector.end());
+    // Call the multiparse routine to parse subexpressions
+    m_headNode = Parser::parseStatements(*this, lex_vector.begin(), lex_vector.end());
 
-      m_syntaxStatus = true;
-    }
-    catch (std::runtime_error &) {
-    }
+    m_syntaxStatus = true;
+  }
+  catch (std::runtime_error &) {
   }
 }
 
@@ -1052,9 +1036,8 @@ Eval::parse()
 void
 Eval::resolve()
 {
-  auto& variableMap = m_variableMap.getMyThreadEntry();
-  for (VariableMap::iterator it = variableMap.begin(); it != variableMap.end(); ++it) {
-    variableMap.getResolver().resolve(it);
+  for (VariableMap::iterator it = m_variableMap.begin(); it != m_variableMap.end(); ++it) {
+    m_variableMap.getResolver().resolve(it);
   }
 }
 
@@ -1069,9 +1052,8 @@ Eval::evaluate() const
   double returnValue = 0.0;
   try
   {
-    auto headNode = m_headNode.getMyThreadEntry();
-    if(headNode) {
-      returnValue = headNode->eval();
+    if(m_headNode) {
+      returnValue = m_headNode->eval();
     }
   }
   catch(expression_evaluation_exception &)
@@ -1085,11 +1067,77 @@ bool
 Eval::undefinedFunction() const
 {
   /* Check for an undefined function in any allocated node */
-  auto& myThreadData = m_nodes.getMyThreadEntry();
-  for (unsigned int i=0; i<myThreadData.size(); i++) {
-    if (myThreadData[i]->m_data.function.undefinedFunction) return true;
+  for (const auto& node : m_nodes) {
+    if (node->m_data.function.undefinedFunction) return true;
   }
   return false;
+}
+
+bool 
+Eval::is_constant_expression() const
+{
+  return m_variableMap.empty();
+}
+
+bool 
+Eval::is_variable(const std::string& variableName) const
+{
+  return (m_variableMap.count(variableName) > 0);
+}
+
+bool
+Eval::is_scalar(const std::string& variableName) const
+{
+  auto variableIterator = m_variableMap.find(variableName);
+
+  if (variableIterator == m_variableMap.end()) { 
+    return false; 
+  }
+  
+  int variableLength = variableIterator->second->getLength();
+  return variableLength == 1 || variableLength == std::numeric_limits<int>::max();  
+}
+
+std::vector<std::string> 
+Eval::get_variable_names() const
+{
+  std::vector<std::string> variableList;
+  for(auto& currentVariable : m_variableMap) {
+    std::string variableName = currentVariable.first;
+    variableList.push_back(variableName);
+  }
+  
+  return variableList;
+}
+
+std::vector<std::string> 
+Eval::get_dependent_variable_names() const
+{
+  std::vector<std::string> dependentVariableList;
+  for(auto& currentVariable : m_variableMap) {
+    std::string variableName = currentVariable.first;
+    stk::expreval::Variable* variable = currentVariable.second.get();
+    if (variable->isDependent()) {
+      dependentVariableList.push_back(variableName);
+    }
+  }
+  
+  return dependentVariableList;
+}
+
+std::vector<std::string> 
+Eval::get_independent_variable_names() const
+{
+  std::vector<std::string> independentVariableList;
+  for(auto& currentVariable : m_variableMap) {
+    std::string variableName = currentVariable.first;
+    stk::expreval::Variable* variable = currentVariable.second.get();
+    if (!(variable->isDependent())) {
+      independentVariableList.push_back(variableName);
+    }
+  }
+  
+  return independentVariableList;
 }
 
 } // namespace expreval

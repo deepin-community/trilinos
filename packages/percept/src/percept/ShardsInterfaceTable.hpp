@@ -25,14 +25,13 @@
 #include <stk_mesh/base/Field.hpp>
 
 #include <stk_mesh/base/CoordinateSystems.hpp>
-#include <stk_mesh/base/Stencils.hpp>
 #include <stk_mesh/base/TopologyDimensions.hpp>
 
 
   namespace percept {
     namespace interface_table {
 
-      typedef void (*stk_set_cell_topology_fptr)(stk::mesh::Part & );
+      typedef void (*stk_set_topology_fptr)(stk::mesh::Part & );
 
  
       enum  ElemTypes { 
@@ -87,7 +86,7 @@
         unsigned vertex_count;
         unsigned node_count;
         int sweptElemType;
-        stk_set_cell_topology_fptr setCellTopoFptr;
+        stk_set_topology_fptr setCellTopoFptr;
       }  elemInfoType;
 
 

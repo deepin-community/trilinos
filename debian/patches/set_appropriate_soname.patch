@@ -1,0 +1,17 @@
+Description: Add major.minor soname version to shared libraries
+Author: Matthias Maier <tamiko+DEBIAN@kyomu.43-1.org>
+Last-Update: 2021-11-26
+
+diff --git a/cmake/tribits/core/package_arch/TribitsLibraryMacros.cmake b/cmake/tribits/core/package_arch/TribitsLibraryMacros.cmake
+index cc97f07b5e..d5c6b33517 100644
+--- a/cmake/tribits/core/package_arch/TribitsLibraryMacros.cmake
++++ b/cmake/tribits/core/package_arch/TribitsLibraryMacros.cmake
+@@ -850,7 +850,7 @@ function(tribits_add_library LIBRARY_NAME_IN)
+         ${LIBRARY_NAME}
+         PROPERTIES
+         VERSION ${${PROJECT_NAME}_VERSION}
+-        SOVERSION ${${PROJECT_NAME}_MAJOR_VERSION}
++        SOVERSION "${${PROJECT_NAME}_VERSION}"
+         )
+     endif()
+ 

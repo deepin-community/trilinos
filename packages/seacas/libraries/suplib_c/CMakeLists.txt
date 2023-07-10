@@ -1,4 +1,3 @@
-
 TRIBITS_SUBPACKAGE(SuplibC)
 
 SET(SUPLIBC_VERSION_MAJOR "3")
@@ -18,6 +17,10 @@ SET(SOURCES
   copy_string.c
   term_width.c
   )
+
+IF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+   APPEND_GLOB(SOURCES XGetopt.c)
+ENDIF()
 
 TRIBITS_ADD_LIBRARY(
   suplib_c

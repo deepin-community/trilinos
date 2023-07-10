@@ -93,13 +93,13 @@ public:
     {
     }
 
-    bool my_internal_modification_end_for_skin_mesh(stk::mesh::EntityRank entity_rank, stk::mesh::impl::MeshModification::modification_optimization opt, stk::mesh::Selector selectedToSkin,
+    bool my_internal_modification_end_for_skin_mesh(stk::mesh::EntityRank entity_rank, stk::mesh::ModEndOptimizationFlag opt, stk::mesh::Selector selectedToSkin,
             const stk::mesh::Selector * only_consider_second_element_from_this_selector = 0)
     {
         return this->internal_modification_end_for_skin_mesh(entity_rank, opt, selectedToSkin, only_consider_second_element_from_this_selector);
     }
 
-    bool my_modification_end_for_entity_creation(const std::vector<stk::mesh::sharing_info>& shared_modified, stk::mesh::impl::MeshModification::modification_optimization opt = stk::mesh::impl::MeshModification::MOD_END_SORT)
+    bool my_modification_end_for_entity_creation(const std::vector<stk::mesh::sharing_info>& shared_modified, stk::mesh::ModEndOptimizationFlag opt = stk::mesh::ModEndOptimizationFlag::MOD_END_SORT)
     {
         if ( this->in_synchronized_state() ) { return false ; }
 
@@ -117,12 +117,11 @@ public:
                 stk::mesh::Entity entity = shared_modified[i].m_entity;
                 int sharing_proc = shared_modified[i].m_sharing_proc;
                 entity_comm_map_insert(entity, stk::mesh::EntityCommInfo(stk::mesh::BulkData::SHARED, sharing_proc));
+                int old_owner = parallel_owner_rank(entity);
                 int owning_proc = shared_modified[i].m_owner;
-                const bool am_not_owner = this->internal_set_parallel_owner_rank_but_not_comm_lists(entity, owning_proc);
-                if (am_not_owner)
+                if (old_owner != owning_proc)
                 {
-                    stk::mesh::EntityKey key = this->entity_key(entity);
-                    internal_change_owner_in_comm_data(key, owning_proc);
+                    internal_set_owner(entity, owning_proc);
                     this->internal_change_entity_parts(entity, shared_part /*add*/, owned_part /*remove*/, scratch1, scratch2);
                 }
                 else
