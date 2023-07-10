@@ -32,11 +32,32 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // 
 
-#include <gtest/gtest.h>
-#include <stk_util/environment/Scheduler.hpp>
+#include "gtest/gtest.h"
+#include "stk_util/environment/Scheduler.hpp"  // for Scheduler, Time, Step
+#include <iomanip>                             // for setprecision, _Setprecision
+#include <iostream>                            // for cout
+#include <limits>                              // for numeric_limits, numeric_limits<>::max_digi...
 
 namespace
 {
+TEST(SchedulerTest, noBonusTimeWithRestart)
+{
+    stk::util::Scheduler scheduler;
+
+    const stk::util::Time startTime = 0.0;
+    const stk::util::Time dt = 0.1;
+    scheduler.add_interval(startTime, dt);
+
+    const stk::util::Time terminationTime = 10;
+    scheduler.set_termination_time(terminationTime);
+
+    const stk::util::Step unusedStep = 0;
+    const stk::util::Time restartTime = 5.0;
+    scheduler.set_restart_time(restartTime);
+    EXPECT_TRUE(scheduler.is_it_time(5.0,unusedStep));
+    EXPECT_FALSE(scheduler.is_it_time(5.02,unusedStep));
+    EXPECT_TRUE(scheduler.is_it_time(5.1,unusedStep));
+}
 
 TEST(SchedulerTest, timeInterval)
 {

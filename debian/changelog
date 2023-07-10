@@ -1,8 +1,42 @@
-trilinos (12.18.1-deepin1) unstable; urgency=medium
+trilinos (13.2.0-4) unstable; urgency=medium
 
-  * Rebuild
+  * Team upload.
 
- -- Deepin Packages Builder <packages@deepin.org>  Fri, 11 Nov 2022 18:06:04 +0800
+  [ Graham Inggs ]
+  * Drop globipack and optipack which have been empty for some time, thanks
+    Lintian! (Closes: #1031964)
+
+  [ Jochen Sprickerhof ]
+  * Drop unused cmake defines
+
+ -- Jochen Sprickerhof <jspricke@debian.org>  Fri, 10 Mar 2023 08:13:22 +0100
+
+trilinos (13.2.0-3) unstable; urgency=medium
+
+  * Stop limiting to 2 parallel build jobs, thanks Adrian Bunk
+
+ -- Graham Inggs <ginggs@debian.org>  Tue, 28 Jun 2022 12:52:43 +0000
+
+trilinos (13.2.0-2) unstable; urgency=medium
+
+  * Disable TBB for now, see #1011928
+
+ -- Graham Inggs <ginggs@debian.org>  Sat, 25 Jun 2022 11:35:37 +0000
+
+trilinos (13.2.0-1) unstable; urgency=medium
+
+  [ Matthias Maier ]
+  * New upstream release
+  * Refresh patches
+  * drop obsolete patches
+  * use major.minor as SOVERSION and in package name and unify package naming
+
+  [ Graham Inggs ]
+  * libtrilinos-tpetra-dev: add missing Breaks+Replaces on
+    libtrilinos-teuchos-dev (<< 13)
+  * Enable build on riscv64
+
+ -- Matthias Maier <tamiko+DEBIAN@kyomu.43-1.org>  Wed, 23 Feb 2022 21:20:43 +0000
 
 trilinos (12.18.1-2) unstable; urgency=medium
 

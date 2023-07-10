@@ -282,10 +282,10 @@ struct StructuredGrid {
   };
 
   KOKKOS_INLINE_FUNCTION
-     std::pair<bool,int> get_fixed_flag_sgrid(StructuredGrid::MTNode node_ptr, StructuredGrid::MTSelector *boundarySelector)
+     Kokkos::pair<bool,int> get_fixed_flag_sgrid(StructuredGrid::MTNode node_ptr, StructuredGrid::MTSelector *boundarySelector)
       {
      //   int dof = -1;
-        std::pair<bool,int> ret(true,MS_VERTEX);
+        Kokkos::pair<bool,int> ret(true,MS_VERTEX);
         //if the owner is something other than the top-level owner, the node
         // is on the boundary; otherwise, it isn't.
         bool& fixed = ret.first;
@@ -390,16 +390,6 @@ struct StructuredGrid {
   /// sets @param field data from @param fld[@param index] into @param node
   template<typename MeshType>
   void set_field(const double * fld, unsigned size, int index, PerceptMesh *eMesh, typename MeshType::MTField *field, typename MeshType::MTNode node);
-
-
-  template<typename T, size_t N>
-  std::ostream& operator<<(std::ostream& os, const std::array<T, N>& arr)
-  {
-    for (unsigned i=0; i < N; ++i)
-      os << arr[i] << (i == N-1 ? "" : " ");
-    return os;
-  }
-
 
 }
 #endif

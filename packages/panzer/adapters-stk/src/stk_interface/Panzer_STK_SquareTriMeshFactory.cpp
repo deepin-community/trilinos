@@ -154,12 +154,19 @@ void SquareTriMeshFactory::completeMeshConstruction(STK_Interface & mesh,stk::Pa
    // finish up the edges
    mesh.buildSubcells();
    mesh.buildLocalElementIDs();
+   if(createEdgeBlocks_) {
+      mesh.buildLocalEdgeIDs();
+   }
 
    // now that edges are built, sidets can be added
    addSideSets(mesh);
 
    // add nodesets
    addNodeSets(mesh);
+
+   if(createEdgeBlocks_) {
+      addEdgeBlocks(mesh);
+   }
 
    // calls Stk_MeshFactory::rebalance
    this->rebalance(mesh);
@@ -186,6 +193,8 @@ void SquareTriMeshFactory::setParameterList(const Teuchos::RCP<Teuchos::Paramete
 
    xProcs_ = paramList->get<int>("X Procs");
    yProcs_ = paramList->get<int>("Y Procs");
+
+   createEdgeBlocks_ = paramList->get<bool>("Create Edge Blocks");
 
    // read in periodic boundary conditions
    parsePeriodicBCList(Teuchos::rcpFromRef(paramList->sublist("Periodic BCs")),periodicBCVec_);
@@ -214,6 +223,9 @@ Teuchos::RCP<const Teuchos::ParameterList> SquareTriMeshFactory::getValidParamet
 
       defaultParams->set<int>("X Elements",5);
       defaultParams->set<int>("Y Elements",5);
+
+      // default to false for backward compatibility
+      defaultParams->set<bool>("Create Edge Blocks",false,"Create edge blocks in the mesh");
 
       Teuchos::ParameterList & bcs = defaultParams->sublist("Periodic BCs");
       bcs.set<int>("Count",0); // no default periodic boundary conditions
@@ -262,6 +274,11 @@ void SquareTriMeshFactory::buildMetaData(stk::ParallelMachine /* parallelMach */
 
    // add nodesets
    mesh.addNodeset("origin");
+
+   if(createEdgeBlocks_) {
+     const CellTopologyData * edge_ctd = shards::CellTopology(ctd).getBaseCellTopologyData(1,0);
+     mesh.addEdgeBlock(panzer_stk::STK_Interface::edgeBlockString, edge_ctd);
+   }
 }
 
 void SquareTriMeshFactory::buildElements(stk::ParallelMachine parallelMach,STK_Interface & mesh) const
@@ -296,9 +313,9 @@ void SquareTriMeshFactory::buildBlock(stk::ParallelMachine /* parallelMach */, i
 
    // build the nodes
    for(int nx=myXElems_start;nx<myXElems_end+1;++nx) {
-      coord[0] = double(nx)*deltaX+x0_;
+      coord[0] = this->getMeshCoord(nx, deltaX, x0_);
       for(int ny=myYElems_start;ny<myYElems_end+1;++ny) {
-         coord[1] = double(ny)*deltaY+y0_;
+         coord[1] = this->getMeshCoord(ny, deltaY, y0_);
 
          mesh.addNode(ny*(totalXElems+1)+nx+1,coord);
       }
@@ -464,6 +481,22 @@ void SquareTriMeshFactory::addNodeSets(STK_Interface & mesh) const
       // add zero node to origin node set
       mesh.addEntityToNodeset(node,origin);
    }
+
+   mesh.endModification();
+}
+
+void SquareTriMeshFactory::addEdgeBlocks(STK_Interface & mesh) const
+{
+   mesh.beginModification();
+
+   stk::mesh::Part * edge_block = mesh.getEdgeBlock(panzer_stk::STK_Interface::edgeBlockString);
+
+   Teuchos::RCP<stk::mesh::BulkData> bulkData = mesh.getBulkData();
+   Teuchos::RCP<stk::mesh::MetaData> metaData = mesh.getMetaData();
+
+   std::vector<stk::mesh::Entity> edges;
+   bulkData->get_entities(mesh.getEdgeRank(),metaData->locally_owned_part(),edges);
+   mesh.addEntitiesToEdgeBlock(edges, edge_block);
 
    mesh.endModification();
 }

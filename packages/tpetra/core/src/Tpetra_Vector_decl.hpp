@@ -44,11 +44,6 @@
 
 /// \file Tpetra_Vector_decl.hpp
 /// \brief Declaration of the Tpetra::Vector class
-///
-/// If you want to use Tpetra::Vector, include "Tpetra_Vector.hpp" (a
-/// file which CMake generates and installs for you).  If you only
-/// want the declaration of Tpetra::Vector, include this file
-/// (Tpetra_Vector_decl.hpp).
 
 #include "Tpetra_ConfigDefs.hpp"
 #include "Tpetra_Vector_fwd.hpp"
@@ -254,30 +249,15 @@ public:
   ///   declarations for copy construction, move construction, copy
   ///   assignment, and move assignment.
   virtual ~Vector () = default;
-
   //@}
-  //! \name Clone method
-  //@{
 
-  /// \brief Return a deep copy of <tt>*this</tt> with a different
-  ///   Node type (and therefore a different Device type).
-  /// \tparam Node2 The returned Vector's Node type.
-  ///
-  /// \param node2 [in] The returned Vector's Kokkos Node instance.
-#ifdef TPETRA_ENABLE_DEPRECATED_CODE
-  template <class Node2>
-  Teuchos::RCP<Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node2> > TPETRA_DEPRECATED
-  clone (const Teuchos::RCP<Node2>& node2);
-#endif
-
-  //@}
   //! @name Post-construction modification routines
   //@{
 
   //! Replace current value at the specified location with specified value.
   /** \pre \c globalRow must be a valid global element on this node, according to the row map.
    */
-  void replaceGlobalValue (const GlobalOrdinal globalRow, const Scalar& value) const;
+  void replaceGlobalValue (const GlobalOrdinal globalRow, const Scalar& value);
 
   /// \brief Add value to existing value, using global (row) index.
   ///
@@ -301,12 +281,12 @@ public:
   void
   sumIntoGlobalValue (const GlobalOrdinal globalRow,
                       const Scalar& value,
-                      const bool atomic = base_type::useAtomicUpdatesByDefault) const;
+                      const bool atomic = base_type::useAtomicUpdatesByDefault);
 
   //! Replace current value at the specified location with specified values.
   /** \pre \c localRow must be a valid local element on this node, according to the row map.
    */
-  void replaceLocalValue (const LocalOrdinal myRow, const Scalar& value) const;
+  void replaceLocalValue (const LocalOrdinal myRow, const Scalar& value);
 
   /// \brief Add \c value to existing value, using local (row) index.
   ///
@@ -328,7 +308,7 @@ public:
   void
   sumIntoLocalValue (const LocalOrdinal myRow,
                      const Scalar& value,
-                     const bool atomic = base_type::useAtomicUpdatesByDefault) const;
+                     const bool atomic = base_type::useAtomicUpdatesByDefault);
 
   //@}
 
@@ -378,14 +358,6 @@ public:
   //! Return the infinity-norm of this Vector.
   mag_type normInf() const;
 
-#ifdef TPETRA_ENABLE_DEPRECATED_CODE
-  using MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::normWeighted; // overloading, not hiding
-  /// \brief Compute Weighted 2-norm (RMS Norm) of this Vector.
-  ///
-  /// \warning This method is DEPRECATED.
-  mag_type TPETRA_DEPRECATED
-  normWeighted (const Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>& weights) const;
-#endif // TPETRA_ENABLE_DEPRECATED_CODE
 
   using MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>::meanValue; // overloading, not hiding
   //! Compute mean (average) value of this Vector.

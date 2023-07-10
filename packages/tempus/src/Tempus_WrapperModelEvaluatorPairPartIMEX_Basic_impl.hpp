@@ -89,7 +89,7 @@ initialize()
 
   int numBlocks = zPVector->productSpace()->numBlocks();
 
-  TEUCHOS_TEST_FOR_EXCEPTION( !(0 <= numExplicitOnlyBlocks_ and
+  TEUCHOS_TEST_FOR_EXCEPTION( !(0 <= numExplicitOnlyBlocks_ &&
                                    numExplicitOnlyBlocks_ < numBlocks),
     std::logic_error,
     "Error - WrapperModelEvaluatorPairPartIMEX_Basic::initialize()\n"
@@ -317,6 +317,7 @@ setParameterIndex(int parameterIndex)
   if (implicitModel_->Np() == 0) {
     if (parameterIndex >= 0) {
       Teuchos::RCP<Teuchos::FancyOStream> out = this->getOStream();
+      out->setOutputToRootOnly(0);
       Teuchos::OSTab ostab(out,1,
         "WrapperModelEvaluatorPairPartIMEX_Basic::setParameterIndex()");
       *out << "Warning -- \n"
@@ -326,6 +327,7 @@ setParameterIndex(int parameterIndex)
     }
     if (parameterIndex_ >= 0) {
       Teuchos::RCP<Teuchos::FancyOStream> out = this->getOStream();
+      out->setOutputToRootOnly(0);
       Teuchos::OSTab ostab(out,1,
         "WrapperModelEvaluatorPairPartIMEX_Basic::setParameterIndex()");
       *out << "Warning -- \n"
@@ -361,7 +363,6 @@ get_f_space() const
   return explicitModel_->get_f_space();
 }
 
-
 template <typename Scalar>
 Thyra::ModelEvaluatorBase::InArgs<Scalar>
 WrapperModelEvaluatorPairPartIMEX_Basic<Scalar>::
@@ -370,7 +371,7 @@ getNominalValues() const
   typedef Thyra::ModelEvaluatorBase MEB;
   MEB::InArgsSetup<Scalar> inArgs = this->createInArgs();
   inArgs.set_Np(1);
-  return inArgs;
+  return std::move(inArgs);
 }
 
 template <typename Scalar>
@@ -386,13 +387,13 @@ createInArgs() const
     MEB::InArgsSetup<Scalar> inArgs(implicitInArgs);
     inArgs.setModelEvalDescription(this->description());
     inArgs.set_Np(np);
-    return inArgs;
+    return std::move(inArgs);
   }
 
   MEB::InArgsSetup<Scalar> inArgs(explicitInArgs);
   inArgs.setModelEvalDescription(this->description());
   inArgs.set_Np(np);
-  return inArgs;
+  return std::move(inArgs);
 }
 
 template <typename Scalar>
@@ -408,13 +409,13 @@ createOutArgsImpl() const
     MEB::OutArgsSetup<Scalar> outArgs(implicitOutArgs);
     outArgs.setModelEvalDescription(this->description());
     outArgs.set_Np_Ng(np,implicitOutArgs.Ng());
-    return outArgs;
+    return std::move(outArgs);
   }
 
   MEB::OutArgsSetup<Scalar> outArgs(explicitOutArgs);
   outArgs.setModelEvalDescription(this->description());
   outArgs.set_Np_Ng(np,explicitOutArgs.Ng());
-  return outArgs;
+  return std::move(outArgs);
 }
 
 template <typename Scalar>
@@ -436,7 +437,7 @@ evalModelImpl(const Thyra::ModelEvaluatorBase::InArgs<Scalar>  & inArgs,
   appImplicitInArgs.set_x_dot(x_dot);
   for (int i=0; i<implicitModel_->Np(); ++i) {
     // Copy over parameters except for the parameter for explicit-only vector!
-    if ((inArgs.get_p(i) != Teuchos::null) and (i != parameterIndex_))
+    if ((inArgs.get_p(i) != Teuchos::null) && (i != parameterIndex_))
       appImplicitInArgs.set_p(i, inArgs.get_p(i));
   }
 

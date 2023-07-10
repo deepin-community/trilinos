@@ -36,6 +36,9 @@
 #include <iostream>                     // for basic_ostream::operator<<
 #include <stk_mesh/base/BulkData.hpp>   // for BulkData, etc
 #include <stk_mesh/base/MeshUtils.hpp>
+#include <stk_mesh/base/Field.hpp>
+#include <stk_mesh/base/FieldBase.hpp>
+#include <stk_io/FillMesh.hpp>
 #include <stk_util/parallel/Parallel.hpp>  // for parallel_machine_rank, etc
 #include <string>                       // for string
 #include <stk_unit_test_utils/BulkDataTester.hpp>
@@ -48,11 +51,7 @@
 #include "UnitTestCEO4ElemEdge.hpp"
 #include "UnitTestCEO4ElemRotate.hpp"
 #include "UnitTestCEO8Elem.hpp"
-#include "mpi.h"                        // for MPI_COMM_WORLD, etc
-#include "stk_io/DatabasePurpose.hpp"   // for DatabasePurpose::READ_MESH
-#include "stk_io/StkMeshIoBroker.hpp"   // for StkMeshIoBroker
 #include "stk_mesh/base/Bucket.hpp"     // for Bucket
-#include "stk_mesh/base/BulkDataInlinedMethods.hpp"
 #include "stk_mesh/base/Entity.hpp"     // for Entity
 #include "stk_mesh/base/EntityKey.hpp"  // for EntityKey
 #include "stk_mesh/base/MetaData.hpp"   // for MetaData
@@ -190,7 +189,7 @@ void test_change_entity_owner_3Elem3Proc_WithCustomGhosts(stk::mesh::BulkData::A
     int psize = stk::parallel_machine_size(communicator);
     int prank = stk::parallel_machine_rank(communicator);
     if(psize == 3)
-    { // Skip unless we're on 2 processors
+    { // Skip unless we're on 3 processors
 
         const int spatialDim = 3;
         std::vector<std::string> rankNames;
@@ -198,31 +197,14 @@ void test_change_entity_owner_3Elem3Proc_WithCustomGhosts(stk::mesh::BulkData::A
         rankNames.push_back("edge");
         rankNames.push_back("face");
         rankNames.push_back("elem");
-        rankNames.push_back("comst");
+        rankNames.push_back("const");
 
         stk::mesh::MetaData stkMeshMetaData(spatialDim, rankNames);
-        //stk::mesh::Part &part = stkMeshMetaData.declare_part("constraints", stk::topology::CONSTRAINT_RANK);
 
         stk::mesh::BulkData stkMeshBulkData(stkMeshMetaData, communicator, autoAuraOption);
         const std::string generatedMeshSpecification = "generated:1x1x6";
 
-        // STK IO module will be described in separate chapter.
-        // It is used here to read the mesh data from the Exodus file and populate an STK Mesh.
-        // The order of the following lines in {} are important
-        {
-            stk::io::StkMeshIoBroker exodusFileReader(communicator);
-
-            // Inform STK IO which STK Mesh objects to populate later
-            exodusFileReader.set_bulk_data(stkMeshBulkData);
-
-            exodusFileReader.add_mesh_database(generatedMeshSpecification, stk::io::READ_MESH);
-
-            // Populate the MetaData which has the descriptions of the Parts and Fields.
-            exodusFileReader.create_input_mesh();
-
-            // Populate entities in STK Mesh from Exodus file
-            exodusFileReader.populate_bulk_data();
-        }
+        stk::io::fill_mesh(generatedMeshSpecification, stkMeshBulkData);
 
         /////////////////////////
         stkMeshBulkData.modification_begin();
@@ -260,6 +242,7 @@ void test_change_entity_owner_3Elem3Proc_WithCustomGhosts(stk::mesh::BulkData::A
         {
             stk::mesh::Entity node1 = stkMeshBulkData.get_entity(stk::topology::NODE_RANK, 1);
             EXPECT_TRUE(stkMeshBulkData.bucket(node1).shared());
+            EXPECT_TRUE(stkMeshBulkData.in_receive_ghost(ghosting, node1));
         }
 
         if(prank==0 || prank==2)
@@ -289,6 +272,11 @@ void test_change_entity_owner_3Elem3Proc_WithCustomGhosts(stk::mesh::BulkData::A
         {
             stk::mesh::Entity elem1 = stkMeshBulkData.get_entity(stk::topology::ELEM_RANK, 1);
             EXPECT_TRUE(stkMeshBulkData.parallel_owner_rank(elem1) == 2);
+            stk::mesh::Entity node1 = stkMeshBulkData.get_entity(stk::topology::NODE_RANK, 1);
+            ASSERT_TRUE(stkMeshBulkData.is_valid(node1));
+            EXPECT_FALSE(stkMeshBulkData.in_receive_ghost(ghosting, node1));
+            stk::mesh::Part& ghostingPart = stkMeshBulkData.ghosting_part(ghosting);
+            EXPECT_FALSE(stkMeshBulkData.bucket(node1).member(ghostingPart));
         }
     }
 }
@@ -301,6 +289,58 @@ TEST(CEO, change_entity_owner_3Elem3Proc_WithCustomGhosts_WithAura)
 TEST(CEO, change_entity_owner_3Elem3Proc_WithCustomGhosts_WithoutAura)
 {
     test_change_entity_owner_3Elem3Proc_WithCustomGhosts(stk::mesh::BulkData::NO_AUTO_AURA);
+}
+
+TEST(CEO,moveElem_fieldDataOfNodes)
+{
+    stk::ParallelMachine comm{MPI_COMM_WORLD};
+    if(stk::parallel_machine_size(comm) == 2)
+    {
+        stk::mesh::MetaData meta;
+        stk::mesh::BulkData bulk(meta, comm);
+        auto &field1 = meta.declare_field<stk::mesh::Field<int>>(stk::topology::NODE_RANK, "field1");
+        stk::mesh::put_field_on_entire_mesh(field1);
+        stk::io::fill_mesh("generated:1x1x2", bulk);
+
+        stk::mesh::EntityVector sharedNodes;
+        stk::mesh::get_selected_entities(meta.globally_shared_part(), bulk.buckets(stk::topology::NODE_RANK), sharedNodes);
+        for(stk::mesh::Entity node : sharedNodes)
+        {
+            int *data = stk::mesh::field_data(field1, node);
+            *data = stk::parallel_machine_rank(comm);
+        }
+
+        stk::mesh::EntityProcVec thingsToChange;
+        if(stk::parallel_machine_rank(comm) == 1)
+        {
+            stk::mesh::EntityVector ownedElems;
+            stk::mesh::get_selected_entities(meta.locally_owned_part(), bulk.buckets(stk::topology::ELEM_RANK), ownedElems);
+
+            ASSERT_EQ(1u, ownedElems.size());
+            stk::mesh::Entity elem{ownedElems[0]};
+            thingsToChange.push_back(stk::mesh::EntityProc(elem, 0));
+        }
+
+        if(stk::parallel_machine_rank(comm) == 0)
+        {
+            for(stk::mesh::Entity node : sharedNodes)
+            {
+                int *data = stk::mesh::field_data(field1, node);
+                EXPECT_EQ(0, *data);
+            }
+        }
+
+        bulk.change_entity_owner(thingsToChange);
+
+        if(stk::parallel_machine_rank(comm) == 0)
+        {
+            for(stk::mesh::Entity node : sharedNodes)
+            {
+                int *data = stk::mesh::field_data(field1, node);
+                EXPECT_EQ(0, *data);
+            }
+        }
+    }
 }
 
 }

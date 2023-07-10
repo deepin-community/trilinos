@@ -44,6 +44,13 @@
 
 #include <FROSch_SchwarzPreconditioner_decl.hpp>
 
+#include <FROSch_SumOperator_def.hpp>
+#include <FROSch_MultiplicativeOperator_def.hpp>
+#include <FROSch_AlgebraicOverlappingOperator_def.hpp>
+#include <FROSch_GDSWCoarseOperator_def.hpp>
+#include <FROSch_RGDSWCoarseOperator_def.hpp>
+#include <FROSch_IPOUHarmonicCoarseOperator_def.hpp>
+
 
 namespace FROSch {
 
@@ -55,9 +62,6 @@ namespace FROSch {
                                                               CommPtr comm) :
     MpiComm_ (comm),
     ParameterList_ (parameterList),
-    UseTranspose_ (false),
-    IsInitialized_ (false),
-    IsComputed_ (false),
     Verbose_ (comm->getRank()==0),
     LevelID_ (ParameterList_->get("Level ID",UN(1)))
     {
@@ -81,6 +85,17 @@ namespace FROSch {
     {
         return IsComputed_; // TODO: Das hat noch keine Bedeutung
     }
+
+    template <class SC,class LO,class GO,class NO>
+    void SchwarzPreconditioner<SC,LO,GO,NO>::residual(const XMultiVector & X,
+                                                      const XMultiVector & B,
+                                                      XMultiVector& R) const
+    {
+        SC one = Teuchos::ScalarTraits<SC>::one(), negone = -one;
+        apply(X,R);
+        R.update(one,B,negone);
+    }
+
 }
 
 #endif

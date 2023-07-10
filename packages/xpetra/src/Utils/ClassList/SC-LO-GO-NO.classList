@@ -9,13 +9,13 @@
 #Matrix
 #MatrixUtils
 #MatrixFactory
-#MultiVector
 #MultiVectorFactory
 #Operator
 #ReorderedBlockedCrsMatrix
 TpetraBlockCrsMatrix
 TpetraCrsMatrix
+#TpetraHalfPrecisionOperator
 ##TpetraVbrMatrix
 ##VbrMatrix
 #Vector
-#VectorFactory
+VectorFactory

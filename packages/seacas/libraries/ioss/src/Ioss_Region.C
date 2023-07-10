@@ -1,35 +1,13 @@
-// Copyright(C) 1999-2017 National Technology & Engineering Solutions
+// Copyright(C) 1999-2021 National Technology & Engineering Solutions
 // of Sandia, LLC (NTESS).  Under the terms of Contract DE-NA0003525 with
 // NTESS, the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//
-//     * Redistributions in binary form must reproduce the above
-//       copyright notice, this list of conditions and the following
-//       disclaimer in the documentation and/or other materials provided
-//       with the distribution.
-//
-//     * Neither the name of NTESS nor the names of its
-//       contributors may be used to endorse or promote products derived
-//       from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// See packages/seacas/LICENSE for details
 
+#include <Ioss_CodeTypes.h>
+
+#include <Ioss_Assembly.h>
+#include <Ioss_Blob.h>
 #include <Ioss_CommSet.h>
 #include <Ioss_CoordinateFrame.h>
 #include <Ioss_DBUsage.h>
@@ -53,6 +31,7 @@
 #include <Ioss_SideBlock.h>
 #include <Ioss_SideSet.h>
 #include <Ioss_SmartAssert.h>
+#include <Ioss_Sort.h>
 #include <Ioss_State.h>
 #include <Ioss_StructuredBlock.h>
 
@@ -70,21 +49,43 @@
 #include <vector>
 
 namespace {
-  const std::string id_str() { return std::string("id"); }
-  const std::string db_name_str() { return std::string("db_name"); }
-  const std::string orig_topo_str() { return std::string("original_topology_type"); }
-  const std::string orig_block_order() { return std::string("original_block_order"); }
+  std::string id_str() { return std::string("id"); }
+  std::string db_name_str() { return std::string("db_name"); }
+  std::string orig_topo_str() { return std::string("original_topology_type"); }
+  std::string orig_block_order() { return std::string("original_block_order"); }
 
-  std::string uppercase(const std::string &my_name);
+  template <typename T>
+  Ioss::GroupingEntity *get_entity_internal(int64_t id, const std::vector<T> &entities)
+  {
+    for (auto ent : entities) {
+      if (ent->property_exists(id_str())) {
+        if (id == ent->get_property(id_str()).get_int()) {
+          return ent;
+        }
+      }
+    }
+    return nullptr;
+  }
 
-  template <typename T> size_t get_variable_count(const std::vector<T> &entities)
+  template <typename T>
+  size_t internal_get_variable_count(const std::vector<T> &entities, Ioss::Field::RoleType role)
   {
     Ioss::NameList names;
     for (auto ent : entities) {
-      ent->field_describe(Ioss::Field::TRANSIENT, &names);
+      ent->field_describe(role, &names);
     }
     Ioss::Utils::uniquify(names);
     return names.size();
+  }
+
+  template <typename T> size_t get_variable_count(const std::vector<T> &entities)
+  {
+    return internal_get_variable_count(entities, Ioss::Field::TRANSIENT);
+  }
+
+  template <typename T> size_t get_reduction_variable_count(const std::vector<T> &entities)
+  {
+    return internal_get_variable_count(entities, Ioss::Field::REDUCTION);
   }
 
   template <typename T> int64_t get_entity_count(const std::vector<T> &entities)
@@ -94,6 +95,20 @@ namespace {
       count += ent->entity_count();
     }
     return count;
+  }
+
+  void update_database(const Ioss::Region *region, Ioss::GroupingEntity *entity)
+  {
+    entity->reset_database(region->get_database());
+  }
+
+  void update_database(const Ioss::Region *region, Ioss::SideSet *sset)
+  {
+    sset->reset_database(region->get_database());
+    const auto &blocks = sset->get_side_blocks();
+    for (const auto &block : blocks) {
+      block->reset_database(region->get_database());
+    }
   }
 
   void check_for_duplicate_names(const Ioss::Region *region, const Ioss::GroupingEntity *entity)
@@ -110,18 +125,12 @@ namespace {
       if (old_ge != nullptr &&
           !(old_ge->type() == Ioss::SIDEBLOCK || old_ge->type() == Ioss::SIDESET)) {
         std::string        filename = region->get_database()->get_filename();
+        int64_t            id1      = entity->get_optional_property(id_str(), 0);
+        int64_t            id2      = old_ge->get_optional_property(id_str(), 0);
         std::ostringstream errmsg;
-        int64_t            id1 = 0;
-        int64_t            id2 = 0;
-        if (entity->property_exists(id_str())) {
-          id1 = entity->get_property(id_str()).get_int();
-        }
-        if (old_ge->property_exists(id_str())) {
-          id2 = old_ge->get_property(id_str()).get_int();
-        }
         fmt::print(errmsg,
                    "ERROR: There are multiple blocks or sets with the same name defined in the "
-                   "exodus file '{}'.\n"
+                   "database file '{}'.\n"
                    "\tBoth {} {} and {} {} are named '{}'.  All names must be unique.",
                    filename, entity->type_string(), id1, old_ge->type_string(), id2, name);
         IOSS_ERROR(errmsg);
@@ -170,6 +179,7 @@ namespace {
     std::vector<size_t> hashes;
 
     size_t which = 1;
+    hashes.reserve(entities.size());
     for (const auto &entity : entities) {
       hashes.push_back(compute_hash(entity, which++));
     }
@@ -202,7 +212,7 @@ namespace {
                  " {} not consistently defined on all processors.\n\t\t"
                  "Check that name and id matches across processors.\n",
                  (count == 1 ? "is" : "are"));
-      fmt::print(stderr, "{}", errmsg.str());
+      IOSS_ERROR(errmsg);
     }
   }
 
@@ -232,6 +242,8 @@ namespace {
     compute_hashes(region.get_sidesets(), hashes, Ioss::SIDESET);
     compute_hashes(region.get_commsets(), hashes, Ioss::COMMSET);
     compute_hashes(region.get_structured_blocks(), hashes, Ioss::STRUCTUREDBLOCK);
+    compute_hashes(region.get_assemblies(), hashes, Ioss::ASSEMBLY);
+    compute_hashes(region.get_blobs(), hashes, Ioss::BLOB);
 
     auto                util = region.get_database()->util();
     std::vector<size_t> min_hash(hashes.begin(), hashes.end());
@@ -284,12 +296,21 @@ namespace {
       report_inconsistency(region.get_structured_blocks(), util);
       differ = true;
     }
+    if (!check_hashes(min_hash, max_hash, Ioss::ASSEMBLY)) {
+      report_inconsistency(region.get_assemblies(), util);
+      differ = true;
+    }
+    if (!check_hashes(min_hash, max_hash, Ioss::BLOB)) {
+      report_inconsistency(region.get_blobs(), util);
+      differ = true;
+    }
     return !differ;
   }
 
   bool is_input_or_appending_output(const Ioss::DatabaseIO *iodatabase)
   {
-    return iodatabase->is_input() || iodatabase->open_create_behavior() == Ioss::DB_APPEND;
+    return iodatabase->is_input() || iodatabase->open_create_behavior() == Ioss::DB_APPEND ||
+           iodatabase->open_create_behavior() == Ioss::DB_MODIFY;
   }
 } // namespace
 
@@ -308,21 +329,20 @@ namespace Ioss {
    *
    */
   Region::Region(DatabaseIO *iodatabase, const std::string &my_name)
-      : GroupingEntity(iodatabase, my_name, 1), currentState(-1), stateCount(0),
-        modelDefined(false), transientDefined(false)
+      : GroupingEntity(iodatabase, my_name, 1)
   {
     SMART_ASSERT(iodatabase != nullptr);
     iodatabase->set_region(this);
 
     if (iodatabase->usage() != Ioss::WRITE_HEARTBEAT &&
         (is_input_or_appending_output(iodatabase))) {
-      // Read metadata -- populates GroupingEntity lists and transient data
       Region::begin_mode(STATE_DEFINE_MODEL);
       iodatabase->read_meta_data();
-      modelDefined     = true;
-      transientDefined = true;
       Region::end_mode(STATE_DEFINE_MODEL);
-      if (iodatabase->open_create_behavior() != Ioss::DB_APPEND) {
+      if (iodatabase->open_create_behavior() != Ioss::DB_APPEND &&
+          iodatabase->open_create_behavior() != Ioss::DB_MODIFY) {
+        modelDefined     = true;
+        transientDefined = true;
         Region::begin_mode(STATE_READONLY);
       }
     }
@@ -333,6 +353,8 @@ namespace Ioss {
     properties.add(Property(this, "face_block_count", Property::INTEGER));
     properties.add(Property(this, "element_block_count", Property::INTEGER));
     properties.add(Property(this, "structured_block_count", Property::INTEGER));
+    properties.add(Property(this, "assembly_count", Property::INTEGER));
+    properties.add(Property(this, "blob_count", Property::INTEGER));
     properties.add(Property(this, "side_set_count", Property::INTEGER));
     properties.add(Property(this, "node_set_count", Property::INTEGER));
     properties.add(Property(this, "edge_set_count", Property::INTEGER));
@@ -401,6 +423,14 @@ namespace Ioss {
         delete (cs);
       }
 
+      for (auto as : assemblies) {
+        delete (as);
+      }
+
+      for (auto bl : blobs) {
+        delete (bl);
+      }
+
       // Region owns the database pointer even though other entities use it.
       GroupingEntity::really_delete_database();
     }
@@ -444,7 +474,7 @@ namespace Ioss {
    *  \param[in,out] strm The output stream to use for printing.
    *  \param[in]     do_transient deprecated and ignored
    */
-  void Region::output_summary(std::ostream &strm, bool /* do_transient */)
+  void Region::output_summary(std::ostream &strm, bool /* do_transient */) const
   {
     int64_t total_cells       = get_entity_count(get_structured_blocks());
     int64_t total_fs_faces    = get_entity_count(get_facesets());
@@ -471,18 +501,34 @@ namespace Ioss {
          get_property("structured_block_count").get_int(), get_property("node_set_count").get_int(),
          get_property("edge_set_count").get_int(), get_property("face_set_count").get_int(),
          get_property("element_set_count").get_int(), get_property("side_set_count").get_int(),
-         num_ts});
+         get_property("assembly_count").get_int(), get_property("blob_count").get_int(), num_ts});
 
-    size_t num_glo_vars = field_count(Ioss::Field::TRANSIENT);
-    size_t num_nod_vars = get_variable_count(get_node_blocks());
-    size_t num_edg_vars = get_variable_count(get_edge_blocks());
-    size_t num_fac_vars = get_variable_count(get_face_blocks());
-    size_t num_ele_vars = get_variable_count(get_element_blocks());
-    size_t num_str_vars = get_variable_count(get_structured_blocks());
-    size_t num_ns_vars  = get_variable_count(get_nodesets());
-    size_t num_es_vars  = get_variable_count(get_edgesets());
-    size_t num_fs_vars  = get_variable_count(get_facesets());
-    size_t num_els_vars = get_variable_count(get_elementsets());
+    // Global variables transitioning from TRANSIENT to REDUCTION..
+    size_t num_glo_vars  = field_count(Ioss::Field::TRANSIENT);
+    size_t num_nod_vars  = get_variable_count(get_node_blocks());
+    size_t num_edg_vars  = get_variable_count(get_edge_blocks());
+    size_t num_fac_vars  = get_variable_count(get_face_blocks());
+    size_t num_ele_vars  = get_variable_count(get_element_blocks());
+    size_t num_str_vars  = get_variable_count(get_structured_blocks());
+    size_t num_ns_vars   = get_variable_count(get_nodesets());
+    size_t num_es_vars   = get_variable_count(get_edgesets());
+    size_t num_fs_vars   = get_variable_count(get_facesets());
+    size_t num_els_vars  = get_variable_count(get_elementsets());
+    size_t num_asm_vars  = get_variable_count(get_assemblies());
+    size_t num_blob_vars = get_variable_count(get_blobs());
+
+    size_t num_glo_red_vars  = field_count(Ioss::Field::REDUCTION);
+    size_t num_nod_red_vars  = get_reduction_variable_count(get_node_blocks());
+    size_t num_edg_red_vars  = get_reduction_variable_count(get_edge_blocks());
+    size_t num_fac_red_vars  = get_reduction_variable_count(get_face_blocks());
+    size_t num_ele_red_vars  = get_reduction_variable_count(get_element_blocks());
+    size_t num_str_red_vars  = get_reduction_variable_count(get_structured_blocks());
+    size_t num_ns_red_vars   = get_reduction_variable_count(get_nodesets());
+    size_t num_es_red_vars   = get_reduction_variable_count(get_edgesets());
+    size_t num_fs_red_vars   = get_reduction_variable_count(get_facesets());
+    size_t num_els_red_vars  = get_reduction_variable_count(get_elementsets());
+    size_t num_asm_red_vars  = get_reduction_variable_count(get_assemblies());
+    size_t num_blob_red_vars = get_reduction_variable_count(get_blobs());
 
     size_t                       num_ss_vars = 0;
     const Ioss::SideSetContainer fss         = get_sidesets();
@@ -490,49 +536,37 @@ namespace Ioss {
       num_ss_vars += get_variable_count(fs->get_side_blocks());
     }
 
-    auto max_vr   = std::max({num_glo_vars, num_nod_vars, num_ele_vars, num_str_vars, num_ns_vars});
-    int  vr_width = Ioss::Utils::number_width(max_vr, true) + 2;
+    auto max_vr    = std::max({num_glo_vars,     num_nod_vars,     num_ele_vars,     num_str_vars,
+                            num_ns_vars,      num_ss_vars,      num_edg_vars,     num_fac_vars,
+                            num_es_vars,      num_fs_vars,      num_els_vars,     num_blob_vars,
+                            num_asm_vars,     num_glo_red_vars, num_nod_red_vars, num_edg_red_vars,
+                            num_fac_red_vars, num_ele_red_vars, num_str_red_vars, num_ns_red_vars,
+                            num_es_red_vars,  num_fs_red_vars,  num_els_red_vars, num_asm_red_vars,
+                            num_blob_red_vars});
+    int  vr_width  = Ioss::Utils::number_width(max_vr, true) + 2;
     int  num_width = Ioss::Utils::number_width(max_entity, true) + 2;
     int  sb_width  = Ioss::Utils::number_width(max_sb, true) + 2;
 
+    // clang-format off
     fmt::print(
         strm,
         "\n Database: {0}\n"
-        " Mesh Type = {1}, {39}\n\n"
-        " Number of spatial dimensions = {2:{24}n}\t"
-        "                           {38:{23}s}\t"
-        " Number of global variables     = {26:{25}n}\n"
-        " Number of node blocks        = {7:{24}n}\t"
-        " Number of nodes         = {3:{23}n}\t"
-        " Number of nodal variables      = {27:{25}n}\n"
-        " Number of edge blocks        = {8:{24}n}\t"
-        " Number of edges         = {4:{23}n}\t"
-        " Number of edge variables       = {33:{25}n}\n"
-        " Number of face blocks        = {9:{24}n}\t"
-        " Number of faces         = {5:{23}n}\t"
-        " Number of face variables       = {34:{25}n}\n"
-        " Number of element blocks     = {10:{24}n}\t"
-        " Number of elements      = {6:{23}n}\t"
-        " Number of element variables    = {28:{25}n}\n"
-        " Number of structured blocks  = {11:{24}n}\t"
-        " Number of cells         = {17:{23}n}\t"
-        " Number of structured variables = {29:{25}n}\n"
-        " Number of node sets          = {12:{24}n}\t"
-        " Length of node list     = {18:{23}n}\t"
-        " Number of nodeset variables    = {30:{25}n}\n"
-        " Number of edge sets          = {13:{24}n}\t"
-        " Length of edge list     = {19:{23}n}\t"
-        " Number of edgeset variables    = {35:{25}n}\n"
-        " Number of face sets          = {14:{24}n}\t"
-        " Length of face list     = {20:{23}n}\t"
-        " Number of faceset variables    = {36:{25}n}\n"
-        " Number of element sets       = {15:{24}n}\t"
-        " Length of element list  = {21:{23}n}\t"
-        " Number of elementset variables = {37:{25}n}\n"
-        " Number of element side sets  = {16:{24}n}\t"
-        " Length of element sides = {22:{23}n}\t"
-        " Number of sideset variables    = {31:{25}n}\n\n"
-        " Number of time steps         = {32:{24}n}\n",
+        " Mesh Type = {1}, {39}\n"
+        "                      {38:{24}s}\t                 {38:{23}s}\t Variables : Transient / Reduction\n"
+        " Spatial dimensions = {2:{24}L}\t                 {38:{23}s}\t Global     = {26:{25}L}\t{44:{25}L}\n"
+        " Node blocks        = {7:{24}L}\t Nodes         = {3:{23}L}\t Nodal      = {27:{25}L}\t{45:{25}L}\n"
+        " Edge blocks        = {8:{24}L}\t Edges         = {4:{23}L}\t Edge       = {33:{25}L}\t{46:{25}L}\n"
+        " Face blocks        = {9:{24}L}\t Faces         = {5:{23}L}\t Face       = {34:{25}L}\t{47:{25}L}\n"
+        " Element blocks     = {10:{24}L}\t Elements      = {6:{23}L}\t Element    = {28:{25}L}\t{48:{25}L}\n"
+        " Structured blocks  = {11:{24}L}\t Cells         = {17:{23}L}\t Structured = {29:{25}L}\t{49:{25}L}\n"
+        " Node sets          = {12:{24}L}\t Node list     = {18:{23}L}\t Nodeset    = {30:{25}L}\t{50:{25}L}\n"
+        " Edge sets          = {13:{24}L}\t Edge list     = {19:{23}L}\t Edgeset    = {35:{25}L}\t{51:{25}L}\n"
+        " Face sets          = {14:{24}L}\t Face list     = {20:{23}L}\t Faceset    = {36:{25}L}\t{52:{25}L}\n"
+        " Element sets       = {15:{24}L}\t Element list  = {21:{23}L}\t Elementset = {37:{25}L}\t{53:{25}L}\n"
+        " Element side sets  = {16:{24}L}\t Element sides = {22:{23}L}\t Sideset    = {31:{25}L}\n"
+        " Assemblies         = {40:{24}L}\t                 {38:{23}s}\t Assembly   = {41:{25}L}\t{54:{25}L}\n"
+        " Blobs              = {42:{24}L}\t                 {38:{23}s}\t Blob       = {43:{25}L}\t{55:{25}L}\n\n"
+        " Time steps         = {32:{24}L}\n",
         get_database()->get_filename(), mesh_type_string(),
         get_property("spatial_dimension").get_int(), get_property("node_count").get_int(),
         get_property("edge_count").get_int(), get_property("face_count").get_int(),
@@ -545,7 +579,12 @@ namespace Ioss {
         total_cells, total_ns_nodes, total_es_edges, total_fs_faces, total_es_elements, total_sides,
         num_width, sb_width, vr_width, num_glo_vars, num_nod_vars, num_ele_vars, num_str_vars,
         num_ns_vars, num_ss_vars, num_ts, num_edg_vars, num_fac_vars, num_es_vars, num_fs_vars,
-        num_els_vars, " ", get_database()->get_format());
+        num_els_vars, " ", get_database()->get_format(), get_property("assembly_count").get_int(),
+        num_asm_vars, get_property("blob_count").get_int(), num_blob_vars, num_glo_red_vars,
+        num_nod_red_vars, num_edg_red_vars, num_fac_red_vars, num_ele_red_vars, num_str_red_vars,
+        num_ns_red_vars, num_es_red_vars, num_fs_red_vars, num_els_red_vars, num_asm_red_vars,
+        num_blob_red_vars);
+    // clang-format on
   }
 
   /** \brief Set the Region and the associated DatabaseIO to the given State.
@@ -576,8 +615,6 @@ namespace Ioss {
         Ioss::Utils::generate_history_mesh(this);
         set_state(new_state);
       }
-
-      IOSS_FUNC_ENTER(m_);
       success = db->begin(new_state);
     }
     return success;
@@ -627,12 +664,22 @@ namespace Ioss {
    */
   bool Region::end_mode(State current_state)
   {
-    IOSS_FUNC_ENTER(m_);
-    return end_mode__(current_state);
+    bool success = true;
+    {
+      IOSS_FUNC_ENTER(m_);
+      success = end_mode__(current_state);
+    }
+
+    // Pass the 'end state' message on to the database so it can do any
+    // cleanup/data checking/manipulations it needs to do.
+    success = get_database()->end(current_state);
+    begin_mode(STATE_CLOSED);
+    return success;
   }
 
   bool Region::end_mode__(State current_state)
   {
+    bool success = true;
     // Check that 'current_state' matches the current state of the
     // Region (that is, we are leaving the state we are in).
     if (get_state() != current_state) {
@@ -649,7 +696,7 @@ namespace Ioss {
         auto sortName = [](const Ioss::EntityBlock *b1, const Ioss::EntityBlock *b2) {
           return (b1->name() < b2->name());
         };
-        std::sort(structuredBlocks.begin(), structuredBlocks.end(), sortName);
+        Ioss::sort(structuredBlocks.begin(), structuredBlocks.end(), sortName);
       }
       else {
         // Sort the element blocks based on the idOffset field, followed by
@@ -663,9 +710,9 @@ namespace Ioss {
                                                : (b1_orderInt < b2_orderInt));
         };
 
-        std::sort(elementBlocks.begin(), elementBlocks.end(), lessOffset);
-        std::sort(faceBlocks.begin(), faceBlocks.end(), lessOffset);
-        std::sort(edgeBlocks.begin(), edgeBlocks.end(), lessOffset);
+        Ioss::sort(elementBlocks.begin(), elementBlocks.end(), lessOffset);
+        Ioss::sort(faceBlocks.begin(), faceBlocks.end(), lessOffset);
+        Ioss::sort(edgeBlocks.begin(), edgeBlocks.end(), lessOffset);
 
         // Now update the block offsets based on this new order...
         {
@@ -718,13 +765,6 @@ namespace Ioss {
       transientDefined = true;
     }
 
-    // Pass the 'end state' message on to the database so it can do any
-    // cleanup/data checking/manipulations it needs to do.
-    DatabaseIO *db      = get_database();
-    bool        success = db->end(current_state);
-
-    begin_mode__(STATE_CLOSED);
-
     return success;
   }
 
@@ -744,8 +784,8 @@ namespace Ioss {
     if (!get_database()->is_input() && !stateTimes.empty() && time <= stateTimes.back()) {
       // Check that time is increasing...
       if (!warning_output) {
-        fmt::print(IOSS_WARNING,
-                   "IOSS WARNING: Current time {} is not greater than previous time {} in\n\t{}.\n"
+        fmt::print(Ioss::WARNING(),
+                   "Current time {} is not greater than previous time {} in\n\t{}.\n"
                    "This may cause problems in applications that assume monotonically increasing "
                    "time values.\n",
                    time, stateTimes.back(), get_database()->get_filename());
@@ -987,6 +1027,7 @@ namespace Ioss {
   bool Region::add(StructuredBlock *structured_block)
   {
     check_for_duplicate_names(this, structured_block);
+    update_database(this, structured_block);
     IOSS_FUNC_ENTER(m_);
 
     // Check that region is in correct state for adding entities
@@ -1017,6 +1058,11 @@ namespace Ioss {
       structured_block->property_add(
           Ioss::Property(orig_block_order(), (int)structuredBlocks.size()));
       structuredBlocks.push_back(structured_block);
+
+      // This will possibly be overwritten at a later time when the block is output
+      // to the cgns file
+      structured_block->property_add(Ioss::Property("zone", (int)structuredBlocks.size()));
+      structured_block->property_add(Ioss::Property("base", 1));
       // Add name as alias to itself to simplify later uses...
       add_alias__(structured_block);
       return true;
@@ -1032,6 +1078,7 @@ namespace Ioss {
   bool Region::add(NodeBlock *node_block)
   {
     check_for_duplicate_names(this, node_block);
+    update_database(this, node_block);
     IOSS_FUNC_ENTER(m_);
 
     // Check that region is in correct state for adding entities
@@ -1039,6 +1086,84 @@ namespace Ioss {
       nodeBlocks.push_back(node_block);
       // Add name as alias to itself to simplify later uses...
       add_alias__(node_block);
+
+      return true;
+    }
+    return false;
+  }
+
+  /** \brief Remove an assembly to the region.
+   *
+   *  \param[in] removal The assembly to remove
+   *  \returns True if successful.
+   *
+   *  Checks other assemblies for uses of this assembly and removes
+   * if from their member lists.
+   */
+  bool Region::remove(Assembly *removal)
+  {
+    IOSS_FUNC_ENTER(m_);
+
+    bool changed = false;
+    // Check that region is in correct state for modifying entities
+    if (get_state() == STATE_DEFINE_MODEL) {
+      // Check all existing assemblies to see if any contain this assembly:
+      for (auto *assembly : assemblies) {
+        bool removed = assembly->remove(removal);
+        if (removed) {
+          changed = true;
+        }
+      }
+
+      // Now remove this assembly...
+      for (size_t i = 0; i < assemblies.size(); i++) {
+        if (assemblies[i] == removal) {
+          assemblies.erase(assemblies.begin() + i);
+          changed = true;
+        }
+      }
+    }
+    return changed;
+  }
+
+  /** \brief Add an assembly to the region.
+   *
+   *  \param[in] assembly The assembly to add
+   *  \returns True if successful.
+   */
+  bool Region::add(Assembly *assembly)
+  {
+    check_for_duplicate_names(this, assembly);
+    update_database(this, assembly);
+    IOSS_FUNC_ENTER(m_);
+
+    // Check that region is in correct state for adding entities
+    if (get_state() == STATE_DEFINE_MODEL) {
+      assemblies.push_back(assembly);
+      // Add name as alias to itself to simplify later uses...
+      add_alias__(assembly);
+
+      return true;
+    }
+    return false;
+  }
+
+  /** \brief Add an blob to the region.
+   *
+   *  \param[in] blob The blob to add
+   *  \returns True if successful.
+   */
+  bool Region::add(Blob *blob)
+  {
+    check_for_duplicate_names(this, blob);
+    update_database(this, blob);
+    IOSS_FUNC_ENTER(m_);
+
+    // Check that region is in correct state for adding entities
+    if (get_state() == STATE_DEFINE_MODEL) {
+      blobs.push_back(blob);
+      // Add name as alias to itself to simplify later uses...
+      add_alias__(blob);
 
       return true;
     }
@@ -1069,6 +1194,7 @@ namespace Ioss {
   bool Region::add(ElementBlock *element_block)
   {
     check_for_duplicate_names(this, element_block);
+    update_database(this, element_block);
     IOSS_FUNC_ENTER(m_);
 
     // Check that region is in correct state for adding entities
@@ -1130,6 +1256,7 @@ namespace Ioss {
   bool Region::add(FaceBlock *face_block)
   {
     check_for_duplicate_names(this, face_block);
+    update_database(this, face_block);
     IOSS_FUNC_ENTER(m_);
 
     // Check that region is in correct state for adding entities
@@ -1165,6 +1292,7 @@ namespace Ioss {
   bool Region::add(EdgeBlock *edge_block)
   {
     check_for_duplicate_names(this, edge_block);
+    update_database(this, edge_block);
     IOSS_FUNC_ENTER(m_);
 
     // Check that region is in correct state for adding entities
@@ -1200,6 +1328,7 @@ namespace Ioss {
   bool Region::add(SideSet *sideset)
   {
     check_for_duplicate_names(this, sideset);
+    update_database(this, sideset);
     IOSS_FUNC_ENTER(m_);
     // Check that region is in correct state for adding entities
     if (get_state() == STATE_DEFINE_MODEL) {
@@ -1219,6 +1348,7 @@ namespace Ioss {
   bool Region::add(NodeSet *nodeset)
   {
     check_for_duplicate_names(this, nodeset);
+    update_database(this, nodeset);
     IOSS_FUNC_ENTER(m_);
     // Check that region is in correct state for adding entities
     if (get_state() == STATE_DEFINE_MODEL) {
@@ -1238,6 +1368,7 @@ namespace Ioss {
   bool Region::add(EdgeSet *edgeset)
   {
     check_for_duplicate_names(this, edgeset);
+    update_database(this, edgeset);
     IOSS_FUNC_ENTER(m_);
     // Check that region is in correct state for adding entities
     if (get_state() == STATE_DEFINE_MODEL) {
@@ -1257,6 +1388,7 @@ namespace Ioss {
   bool Region::add(FaceSet *faceset)
   {
     check_for_duplicate_names(this, faceset);
+    update_database(this, faceset);
     IOSS_FUNC_ENTER(m_);
     // Check that region is in correct state for adding entities
     if (get_state() == STATE_DEFINE_MODEL) {
@@ -1276,6 +1408,7 @@ namespace Ioss {
   bool Region::add(ElementSet *elementset)
   {
     check_for_duplicate_names(this, elementset);
+    update_database(this, elementset);
     IOSS_FUNC_ENTER(m_);
     // Check that region is in correct state for adding entities
     if (get_state() == STATE_DEFINE_MODEL) {
@@ -1295,6 +1428,7 @@ namespace Ioss {
   bool Region::add(CommSet *commset)
   {
     check_for_duplicate_names(this, commset);
+    update_database(this, commset);
     IOSS_FUNC_ENTER(m_);
     // Check that region is in correct state for adding entities
     if (get_state() == STATE_DEFINE_MODEL) {
@@ -1305,6 +1439,18 @@ namespace Ioss {
     }
     return false;
   }
+
+  /** \brief Get all the region's Assembly objects.
+   *
+   *  \returns A vector of all the region's Assembly objects.
+   */
+  const AssemblyContainer &Region::get_assemblies() const { return assemblies; }
+
+  /** \brief Get all the region's Blob objects.
+   *
+   *  \returns A vector of all the region's Blob objects.
+   */
+  const BlobContainer &Region::get_blobs() const { return blobs; }
 
   /** \brief Get all the region's NodeBlock objects.
    *
@@ -1400,15 +1546,8 @@ namespace Ioss {
       if (old_ge != nullptr && ge != old_ge) {
         if (!((old_ge->type() == SIDEBLOCK && ge->type() == SIDESET) ||
               (ge->type() == SIDEBLOCK && old_ge->type() == SIDESET))) {
-          ssize_t old_id = -1;
-          ssize_t new_id = -1;
-          if (old_ge->property_exists(id_str())) {
-            old_id = old_ge->get_property(id_str()).get_int();
-          }
-          if (ge->property_exists(id_str())) {
-            new_id = ge->get_property(id_str()).get_int();
-          }
-
+          ssize_t            old_id = old_ge->get_optional_property(id_str(), -1);
+          ssize_t            new_id = ge->get_optional_property(id_str(), -1);
           std::ostringstream errmsg;
           fmt::print(errmsg,
                      "\n\nERROR: Duplicate names detected.\n"
@@ -1457,7 +1596,7 @@ namespace Ioss {
     }
 
     if (!canon.empty()) {
-      std::string uname = uppercase(alias);
+      std::string uname = Ioss::Utils::uppercase(alias);
       if (uname != alias) {
         aliases_.insert(std::make_pair(uname, canon));
       }
@@ -1487,7 +1626,7 @@ namespace Ioss {
 
   std::string Region::get_alias__(const std::string &alias) const
   {
-    std::string ci_alias = uppercase(alias);
+    std::string ci_alias = Ioss::Utils::uppercase(alias);
     auto        I        = aliases_.find(ci_alias);
     if (I == aliases_.end()) {
       return "";
@@ -1507,7 +1646,7 @@ namespace Ioss {
   {
     IOSS_FUNC_ENTER(m_);
     size_t size = aliases.size();
-    for (auto alias_pair : aliases_) {
+    for (const auto &alias_pair : aliases_) {
       std::string alias = alias_pair.first;
       std::string base  = alias_pair.second;
       if (base == my_name) {
@@ -1566,6 +1705,12 @@ namespace Ioss {
     }
     else if (io_type == SIDEBLOCK) {
       return get_sideblock(my_name);
+    }
+    else if (io_type == ASSEMBLY) {
+      return get_assembly(my_name);
+    }
+    else if (io_type == BLOB) {
+      return get_blob(my_name);
     }
     return nullptr;
   }
@@ -1629,8 +1774,109 @@ namespace Ioss {
     if (entity != nullptr) {
       return entity;
     }
+    entity = get_assembly(my_name);
+    if (entity != nullptr) {
+      return entity;
+    }
+    entity = get_blob(my_name);
+    if (entity != nullptr) {
+      return entity;
+    }
 
     return entity;
+  }
+
+  /** \brief Get an entity of a known EntityType and specified id
+   *
+   *  \param[in] id The id of the entity to get
+   *  \param[in] io_type The known type of the entity.
+   *  \returns The entity with the given id of the given type, or nullptr if not found or if ids not
+   * supported.
+   */
+  GroupingEntity *Region::get_entity(int64_t id, EntityType io_type) const
+  {
+    if (io_type == NODEBLOCK) {
+      return get_entity_internal(id, get_node_blocks());
+    }
+    if (io_type == ELEMENTBLOCK) {
+      return get_entity_internal(id, get_element_blocks());
+    }
+    if (io_type == STRUCTUREDBLOCK) {
+      return get_entity_internal(id, get_structured_blocks());
+    }
+    if (io_type == FACEBLOCK) {
+      return get_entity_internal(id, get_face_blocks());
+    }
+    if (io_type == EDGEBLOCK) {
+      return get_entity_internal(id, get_edge_blocks());
+    }
+    if (io_type == SIDESET) {
+      return get_entity_internal(id, get_sidesets());
+    }
+    if (io_type == NODESET) {
+      return get_entity_internal(id, get_nodesets());
+    }
+    else if (io_type == EDGESET) {
+      return get_entity_internal(id, get_edgesets());
+    }
+    else if (io_type == FACESET) {
+      return get_entity_internal(id, get_facesets());
+    }
+    else if (io_type == ELEMENTSET) {
+      return get_entity_internal(id, get_elementsets());
+    }
+    else if (io_type == COMMSET) {
+      return get_entity_internal(id, get_commsets());
+    }
+    else if (io_type == ASSEMBLY) {
+      return get_entity_internal(id, get_assemblies());
+    }
+    else if (io_type == BLOB) {
+      return get_entity_internal(id, get_blobs());
+    }
+    return nullptr;
+  }
+
+  /** \brief Get the assembly with the given name.
+   *
+   *  \param[in] my_name The name of the assembly to get.
+   *  \returns The assembly, or nullptr if not found.
+   */
+  Assembly *Region::get_assembly(const std::string &my_name) const
+  {
+    IOSS_FUNC_ENTER(m_);
+    const std::string db_name = get_alias__(my_name);
+    unsigned int      db_hash = Ioss::Utils::hash(db_name);
+
+    Assembly *ge = nullptr;
+    for (auto as : assemblies) {
+      if (db_hash == as->hash() && as->name() == db_name) {
+        ge = as;
+        break;
+      }
+    }
+    return ge;
+  }
+
+  /** \brief Get the blob with the given name.
+   *
+   *  \param[in] my_name The name of the blob to get.
+   *  \returns The blob, or nullptr if not found.
+   */
+  Blob *Region::get_blob(const std::string &my_name) const
+  {
+    IOSS_FUNC_ENTER(m_);
+    const std::string db_name = get_alias__(my_name);
+    unsigned int      db_hash = Ioss::Utils::hash(db_name);
+
+    Blob *ge = nullptr;
+    for (auto bl : blobs) {
+      if (db_hash == bl->hash() && bl->name() == db_name) {
+        ge = bl;
+        break;
+      }
+    }
+    return ge;
   }
 
   /** \brief Get the node block with the given name.
@@ -1921,6 +2167,18 @@ namespace Ioss {
       }
       return true;
     }
+    if (((io_type & ASSEMBLY) != 0u) && get_assembly(my_name) != nullptr) {
+      if (my_type != nullptr) {
+        *my_type = "ASSEMBLY";
+      }
+      return true;
+    }
+    if (((io_type & BLOB) != 0u) && get_blob(my_name) != nullptr) {
+      if (my_type != nullptr) {
+        *my_type = "BLOB";
+      }
+      return true;
+    }
     if (((io_type & EDGEBLOCK) != 0u) && get_edge_block(my_name) != nullptr) {
       if (my_type != nullptr) {
         *my_type = "EDGE_BLOCK";
@@ -2071,6 +2329,14 @@ namespace Ioss {
       return Property(my_name, static_cast<int>(structuredBlocks.size()));
     }
 
+    if (my_name == "assembly_count") {
+      return Property(my_name, static_cast<int>(assemblies.size()));
+    }
+
+    if (my_name == "blob_count") {
+      return Property(my_name, static_cast<int>(blobs.size()));
+    }
+
     if (my_name == "side_set_count") {
       return Property(my_name, static_cast<int>(sideSets.size()));
     }
@@ -2177,7 +2443,7 @@ namespace Ioss {
     // Iterate through list, [ returns <alias, base_entity_name> ], if
     // 'base_entity_name' is defined on the restart file, add 'alias' as
     // an alias for it...
-    for (auto alias_pair : aliases_) {
+    for (const auto &alias_pair : aliases_) {
       std::string alias = alias_pair.first;
       std::string base  = alias_pair.second;
       if (alias != base && to->get_entity(base) != nullptr) {
@@ -2226,7 +2492,7 @@ namespace Ioss {
    */
   void Region::synchronize_id_and_name(const Region *from, bool sync_attribute_field_names)
   {
-    for (auto alias_pair : aliases_) {
+    for (const auto &alias_pair : aliases_) {
       std::string alias = alias_pair.first;
       std::string base  = alias_pair.second;
 
@@ -2317,7 +2583,7 @@ namespace Ioss {
       }
     }
 
-    for (auto alias_pair : aliases_) {
+    for (const auto &alias_pair : aliases_) {
       std::string alias = alias_pair.first;
       std::string base  = alias_pair.second;
 
@@ -2330,12 +2596,3 @@ namespace Ioss {
     }
   }
 } // namespace Ioss
-
-namespace {
-  std::string uppercase(const std::string &my_name)
-  {
-    std::string s(my_name);
-    std::transform(s.begin(), s.end(), s.begin(), toupper);
-    return s;
-  }
-} // namespace

@@ -612,9 +612,9 @@ namespace percept {
         std::vector<int>& normalsSet = m_nodeNormalsSetMap[node];
         for (unsigned jj=0; jj < normals.size(); ++jj)
           {
-            if (normalsSet[jj] && Math::norm_3d(normals[jj].c_array()) > 0.0)
+            if (normalsSet[jj] && Math::norm_3d(normals[jj].data()) > 0.0)
               {
-                Math::normalize_3d(normals[jj].c_array());
+                Math::normalize_3d(normals[jj].data());
               }
             else
               {
@@ -962,7 +962,7 @@ namespace percept {
               {
                 if (m_eMesh.shared(nodes[ii]))
                   {
-                    m_eMesh.get_bulk_data()->comm_procs(m_eMesh.key(nodes[ii]), procs);
+                    m_eMesh.get_bulk_data()->comm_procs(nodes[ii], procs);
                     for (unsigned jj=0; jj < procs.size(); ++jj)
                       {
                         commAll.send_buffer( procs[jj] ).pack< stk::mesh::EntityId > (ID(nodes[ii]));
@@ -1155,7 +1155,7 @@ namespace percept {
       {
         tangent[j] = nd1[j] - nd0[j];
       }
-    Math::normalize_3d(tangent.c_array());
+    Math::normalize_3d(tangent.data());
     return tangent;
   }
 
@@ -1484,12 +1484,12 @@ namespace percept {
 
                     if (orient0 >= 0)
                       {
-                        Math::copy_3d(n.getData().get(), normals0[orient0].c_array());
+                        Math::copy_3d(n.getData().get(), normals0[orient0].data());
                         VERIFY_OP_ON(Math::norm_3d(n.getData().get()), >, 1.e-8, "bad norm");
                       }
                     if (orient1 >= 0)
                       {
-                        Math::copy_3d(np.getData().get(), normals1[orient1].c_array());
+                        Math::copy_3d(np.getData().get(), normals1[orient1].data());
                         VERIFY_OP_ON(Math::norm_3d(np.getData().get()), >, 1.e-8, "bad normp");
                       }
 
@@ -1916,8 +1916,8 @@ namespace percept {
               VERIFY_OP_ON(y_surface_set.Type(), ==, YAML::NodeType::Map, "bad surface_set data");
               for (YAML::const_iterator i = y_surface_set.begin(); i != y_surface_set.end(); ++i)
                 {
-                  const YAML::Node & key   = i->first;
-                  const YAML::Node & value = i->second;
+                  const YAML::Node key   = i->first;
+                  const YAML::Node value = i->second;
                   std::string v_key;
                   v_key = key.as<std::string>();
                   VERIFY_OP_ON(value.Type(), ==, YAML::NodeType::Sequence, "bad surface_set value data in [surfaceSetName: [s1,s2...]]");
@@ -1938,8 +1938,8 @@ namespace percept {
           VERIFY_OP_ON(y_angle_map.Type(), ==, YAML::NodeType::Map, "bad angle_map data in yaml file");
           for (YAML::const_iterator i = y_angle_map.begin(); i != y_angle_map.end(); ++i)
             {
-              const YAML::Node & key   = i->first;
-              const YAML::Node & value = i->second;
+              const YAML::Node key   = i->first;
+              const YAML::Node value = i->second;
               std::string v_key = key.as<std::string>();
               double v_value = value.as<double>();
               m_angleMap[v_key] = v_value;

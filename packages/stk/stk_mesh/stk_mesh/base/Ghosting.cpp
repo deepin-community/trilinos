@@ -45,7 +45,7 @@ namespace mesh {
 void Ghosting::send_list( std::vector< EntityProc > & v ) const
 {
   for ( const EntityCommListInfo& commListInfo : m_mesh.internal_comm_list() ) {
-    if ( commListInfo.owner == m_mesh.parallel_rank() ) {
+    if ( m_mesh.parallel_owner_rank(commListInfo.entity) == m_mesh.parallel_rank() ) {
       for ( PairIterEntityComm ec = m_mesh.internal_entity_comm_map(commListInfo.key) ; ! ec.empty() ; ++ec ) {
         if ( ec->ghost_id == m_ordinal ) {
           v.push_back( EntityProc( commListInfo.entity , ec->proc ) );
@@ -55,13 +55,26 @@ void Ghosting::send_list( std::vector< EntityProc > & v ) const
   }
 }
 
-void Ghosting::receive_list( std::vector<EntityKey> & v ) const
+void Ghosting::receive_list( std::vector<EntityKey> & keys ) const
 {
   for ( const EntityCommListInfo& commListInfo : m_mesh.internal_comm_list() ) {
-    if ( commListInfo.owner != m_mesh.parallel_rank() ) {
+    if ( m_mesh.parallel_owner_rank(commListInfo.entity) != m_mesh.parallel_rank() ) {
       for ( PairIterEntityComm ec = m_mesh.internal_entity_comm_map(commListInfo.key) ; ! ec.empty() ; ++ec ) {
         if ( ec->ghost_id == m_ordinal ) {
-          v.push_back(commListInfo.key);
+          keys.push_back(commListInfo.key);
+        }
+      }
+    }
+  }
+}
+
+void Ghosting::receive_list( std::vector<Entity> & entities ) const
+{
+  for ( const EntityCommListInfo& commListInfo : m_mesh.internal_comm_list() ) {
+    if ( m_mesh.parallel_owner_rank(commListInfo.entity) != m_mesh.parallel_rank() ) {
+      for ( PairIterEntityComm ec = m_mesh.internal_entity_comm_map(commListInfo.key) ; ! ec.empty() ; ++ec ) {
+        if ( ec->ghost_id == m_ordinal ) {
+          entities.push_back(commListInfo.entity);
         }
       }
     }
@@ -76,7 +89,7 @@ std::ostream& Ghosting::operator<<(std::ostream& out) const
   out << "  Locally owned entities ghosted on other processors (send list):\n";
 
   for ( const EntityCommListInfo& commListInfo : m_mesh.internal_comm_list() ) {
-    if ( commListInfo.owner == m_mesh.parallel_rank() ) {
+    if ( m_mesh.parallel_owner_rank(commListInfo.entity) == m_mesh.parallel_rank() ) {
       for ( PairIterEntityComm ec = m_mesh.internal_entity_comm_map(commListInfo.key) ; ! ec.empty() ; ++ec ) {
         if ( ec->ghost_id == m_ordinal ) {
           out << "    ";
@@ -90,12 +103,12 @@ std::ostream& Ghosting::operator<<(std::ostream& out) const
 
   out << "  Entities ghosted on this processor from the owner (recv list):\n";
   for ( const EntityCommListInfo& commListInfo : m_mesh.internal_comm_list() ) {
-    if ( commListInfo.owner != m_mesh.parallel_rank() ) {
+    if ( m_mesh.parallel_owner_rank(commListInfo.entity) != m_mesh.parallel_rank() ) {
       for ( PairIterEntityComm ec = m_mesh.internal_entity_comm_map(commListInfo.key); !ec.empty(); ++ec ) {
         if ( ec->ghost_id == m_ordinal ) {
           out << "    ";
           out << commListInfo.key.id();
-          out << ", owner of ghost is " << commListInfo.owner
+          out << ", owner of ghost is " << m_mesh.parallel_owner_rank(commListInfo.entity)
               << ", status is: " << m_mesh.state(commListInfo.entity) << "\n";
         }
       }

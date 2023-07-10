@@ -18,7 +18,6 @@ Build-Depends: debhelper-compat (= 13),
  liblapack-dev,
  libmumps-dev (>= 4.10),
  libptscotch-dev (>= 6.0.3),
- libtbb-dev,
  openmpi-bin,
  zlib1g-dev
 Build-Depends-Indep: bc,
@@ -36,7 +35,7 @@ Vcs-Git: https://salsa.debian.org/science-team/trilinos.git
 Vcs-Browser: https://salsa.debian.org/science-team/trilinos
 
 Package: trilinos-all-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}, ${mydevpackages}
@@ -51,7 +50,7 @@ Description: object-oriented framework for large-scale problems - development fi
  This package depends on all Trilinos development packages.
 
 Package: trilinos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${misc:Depends}
@@ -65,8 +64,8 @@ Description: object-oriented framework for large-scale problems - development fi
  .
  This package contains the development header and some makefile templates.
 
-Package: libtrilinos-amesos12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-amesos-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -78,12 +77,12 @@ Description: direct sparse solver package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-amesos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libmumps-dev, libtrilinos-amesos12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libmumps-dev, libtrilinos-amesos-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: direct sparse solver package - development files
  Amesos is the Direct Sparse Solver Package in Trilinos. The goal of Amesos is
@@ -92,8 +91,8 @@ Description: direct sparse solver package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-amesos2-12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-amesos2-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -105,12 +104,12 @@ Description: next generation direct sparse solver package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-amesos2-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libmumps-dev, libtrilinos-amesos2-12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libmumps-dev, libtrilinos-amesos2-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: next generation direct sparse solver package - development files
  Amesos2 is a package for solving sparse linear systems using direct solvers.
@@ -119,8 +118,8 @@ Description: next generation direct sparse solver package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-anasazi12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-anasazi-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -135,10 +134,10 @@ Description: large-scale eigenvalue algorithms - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-anasazi-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-anasazi12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-anasazi-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: large-scale eigenvalue algorithms - development files
  Anasazi is an extensible and interoperable framework for large-scale
@@ -150,8 +149,8 @@ Description: large-scale eigenvalue algorithms - development files
  .
  This package provides headers.
 
-Package: libtrilinos-aztecoo12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-aztecoo-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -165,10 +164,10 @@ Description: object-oriented interface to the Aztec solver - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-aztecoo-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: liblapack-dev, libtrilinos-aztecoo12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: liblapack-dev, libtrilinos-aztecoo-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: object-oriented interface to the Aztec solver - development files
  AztecOO provides an object-oriented interface to the well-known Aztec solver
@@ -179,8 +178,8 @@ Description: object-oriented interface to the Aztec solver - development files
  .
  This package provides headers.
 
-Package: libtrilinos-belos12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-belos-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -194,10 +193,10 @@ Description: iterative linear solvers - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-belos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-belos12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-belos-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Breaks: libtrilinos-muelu-dev (<< 12.14)
 Replaces: libtrilinos-muelu-dev (<< 12.14)
 Suggests: trilinos-doc
@@ -210,8 +209,8 @@ Description: iterative linear solvers - development files
  .
  This package provides headers.
 
-Package: libtrilinos-epetra12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-epetra-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -223,10 +222,10 @@ Description: basis package for linear algebra - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-epetra-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-epetra12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-epetra-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: basis package for linear algebra - development files
  Epetra provides the fundamental construction routines and services function
@@ -235,8 +234,8 @@ Description: basis package for linear algebra - development files
  .
  This package provides headers.
 
-Package: libtrilinos-epetraext12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-epetraext-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -247,10 +246,10 @@ Description: extensions to the Epetra toolkit - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-epetraext-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libhdf5-openmpi-dev, libtrilinos-epetraext12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libhdf5-openmpi-dev, libtrilinos-epetraext-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: extensions to the Epetra toolkit - development files
  EpetraExt provides tools and functions that make it easier to work with
@@ -258,8 +257,8 @@ Description: extensions to the Epetra toolkit - development files
  .
  This package provides headers.
 
-Package: libtrilinos-galeri12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-galeri-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -273,10 +272,10 @@ Description: generation of distributed linear systems - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-galeri-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-galeri12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-galeri-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: generation of distributed linear systems - development files
  The Trilinos package Galeri contains a suite of utilities and classes to
@@ -287,39 +286,8 @@ Description: generation of distributed linear systems - development files
  .
  This package provides headers.
 
-Package: libtrilinos-globipack12
-Architecture: amd64 arm64 ppc64el s390x ppc64
-Multi-Arch: same
-Section: libs
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: 1D globalization capabilities - runtime files
- The GlobiPack package contains a set of interfaces and implementations for 1D
- globalization capabilities to be used in nonlinear solvers, optimization
- solvers, and similar algorithms that require globalization methods (e.g. line
- search and trust region methods). Basic interfaces and a few implementations
- are present for 1D line search methods appropritate for Newton, quasi-Newton,
- and nonlinear CG algorithms.
- .
- This package contains the dynamic libraries.
-
-Package: libtrilinos-globipack-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
-Multi-Arch: same
-Section: libdevel
-Depends: libtrilinos-globipack12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
-Suggests: trilinos-doc
-Description: 1D globalization capabilities - development files
- The GlobiPack package contains a set of interfaces and implementations for 1D
- globalization capabilities to be used in nonlinear solvers, optimization
- solvers, and similar algorithms that require globalization methods (e.g. line
- search and trust region methods). Basic interfaces and a few implementations
- are present for 1D line search methods appropritate for Newton, quasi-Newton,
- and nonlinear CG algorithms.
- .
- This package provides headers.
-
-Package: libtrilinos-ifpack12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-ifpack-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -333,12 +301,12 @@ Description: algebraic preconditioners - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-ifpack-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-ifpack12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-ifpack-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: algebraic preconditioners - development files
  IFPACK provides a suite of object-oriented algebraic preconditioners for the
@@ -349,8 +317,8 @@ Description: algebraic preconditioners - development files
  .
  This package provides headers.
 
-Package: libtrilinos-ifpack2-12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-ifpack2-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -364,12 +332,12 @@ Description: next generation algebraic preconditioners - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-ifpack2-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-ifpack2-12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-ifpack2-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: next generation algebraic preconditioners - development files
  Ifpack2 provides incomplete factorizations, relaxations, and domain
@@ -380,8 +348,8 @@ Description: next generation algebraic preconditioners - development files
  .
  This package provides headers.
 
-Package: libtrilinos-intrepid12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-intrepid-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -395,10 +363,10 @@ Description: compatible discretizations of PDEs - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-intrepid-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-intrepid12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-intrepid-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: compatible discretizations of PDEs - development files
  Intrepid is a library of interoperable tools for compatible discretizations of
@@ -409,8 +377,8 @@ Description: compatible discretizations of PDEs - development files
  .
  This package provides headers.
 
-Package: libtrilinos-intrepid2-12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-intrepid2-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -423,10 +391,10 @@ Description: next generation compatible discretizations of PDEs - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-intrepid2-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-intrepid2-12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-intrepid2-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: next generation compatible discretizations of PDEs - development files
  Intrepid2 is an extension of Intrepid, a library of interoperable tools for
@@ -436,8 +404,8 @@ Description: next generation compatible discretizations of PDEs - development fi
  .
  This package provides headers.
 
-Package: libtrilinos-isorropia12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-isorropia-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -452,10 +420,10 @@ Description: partitioning, load balancing, coloring of sparse matrices - runtime
  This package contains the dynamic libraries.
 
 Package: libtrilinos-isorropia-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-isorropia12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-isorropia-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: partitioning, load balancing, coloring of sparse matrices - development files
  Isorropia is a package for combinatorial scientific computing, with focus on
@@ -467,8 +435,8 @@ Description: partitioning, load balancing, coloring of sparse matrices - develop
  .
  This package provides headers.
 
-Package: libtrilinos-kokkos12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-kokkos-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -483,10 +451,10 @@ Description: Trilinos Kokkos programming model - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-kokkos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-kokkos12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-kokkos-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: Trilinos Kokkos programming model - development files
  Kokkos implements a programming model in C++ for writing performance portable
@@ -498,8 +466,8 @@ Description: Trilinos Kokkos programming model - development files
  .
  This package provides headers.
 
-Package: libtrilinos-kokkos-kernels12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-kokkos-kernels-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -516,12 +484,12 @@ Description: Kokkos local computational kernels - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-kokkos-kernels-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 Replaces: libtrilinos-tpetra-dev (<< 12.12.0)
 Breaks: libtrilinos-tpetra-dev (<< 12.12.0)
-Depends: libtrilinos-kokkos-kernels12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-kokkos-kernels-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: Kokkos local computational kernels - development files
  KokkosKernels implements local computational kernels for linear algebra and
@@ -535,8 +503,8 @@ Description: Kokkos local computational kernels - development files
  .
  This package provides headers.
 
-Package: libtrilinos-komplex12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-komplex-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -547,10 +515,10 @@ Description: complex linear solver package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-komplex-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-komplex12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-komplex-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: complex linear solver package - development files
  Komplex is a complex linear solver package. Solves complex-valued linear
@@ -558,8 +526,8 @@ Description: complex linear solver package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-ml12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-ml-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -577,12 +545,12 @@ Description: multigrid preconditioning - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-ml-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-ml12 (= ${binary:Version}), trilinos-dev, ${misc:Depends},
+Depends: libtrilinos-ml-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends},
  libtrilinos-aztecoo-dev, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: multigrid preconditioning - development files
@@ -598,8 +566,8 @@ Description: multigrid preconditioning - development files
  .
  This package provides headers.
 
-Package: libtrilinos-moertel12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-moertel-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -617,10 +585,10 @@ Description: mortar methods package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-moertel-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-moertel12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-moertel-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: mortar methods package - development files
  This package supplies capabilities for nonconforming mesh tying and contact
@@ -635,8 +603,8 @@ Description: mortar methods package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-muelu12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-muelu-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -650,12 +618,12 @@ Description: next generation multilevel preconditioner capabilities - runtime fi
  This package contains the dynamic libraries.
 
 Package: libtrilinos-muelu-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-muelu12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-muelu-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: next generation multilevel preconditioner capabilities - development files
  MueLu is designed to solve large sparse linear systems of equations arising
@@ -666,8 +634,8 @@ Description: next generation multilevel preconditioner capabilities - developmen
  .
  This package provides headers.
 
-Package: libtrilinos-nox12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-nox-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -681,12 +649,12 @@ Description: robust solution of nonlinear equations - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-nox-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-nox12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-nox-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: robust solution of nonlinear equations - development files
  NOX robustly solves and analyzes large-scale systems of nonlinear equations.
@@ -697,33 +665,8 @@ Description: robust solution of nonlinear equations - development files
  .
  This package provides headers.
 
-Package: libtrilinos-optipack12
-Architecture: amd64 arm64 ppc64el s390x ppc64
-Multi-Arch: same
-Section: libs
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Trilinos optimization algorithms - runtime files
- The OptiPack package contains interfaces and concrete implementations of some
- basic optimization algorithms based on Thyra. The globalization methods used
- are implemented in GlobiPack.
- .
- This package contains the dynamic libraries.
-
-Package: libtrilinos-optipack-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
-Multi-Arch: same
-Section: libdevel
-Depends: libtrilinos-optipack12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
-Suggests: trilinos-doc
-Description: Trilinos optimization algorithms - development files
- The OptiPack package contains interfaces and concrete implementations of some
- basic optimization algorithms based on Thyra. The globalization methods used
- are implemented in GlobiPack.
- .
- This package provides headers.
-
-Package: libtrilinos-pamgen12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-pamgen-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -736,10 +679,10 @@ Description: hexahedral and quadrilateral mesh generator - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-pamgen-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-pamgen12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-pamgen-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: hexahedral and quadrilateral mesh generator - development files
  PAMGEN creates hexahedral or quadrilateral (in 2D) finite element meshes of
@@ -749,8 +692,8 @@ Description: hexahedral and quadrilateral mesh generator - development files
  .
  This package provides headers.
 
-Package: libtrilinos-phalanx12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-phalanx-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -768,10 +711,10 @@ Description: local field evaluation kernel - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-phalanx-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-phalanx12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-phalanx-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: local field evaluation kernel - development files
  Phalanx is a local field evaluation kernel specifically designed for general
@@ -786,8 +729,8 @@ Description: local field evaluation kernel - development files
  .
  This package provides headers.
 
-Package: libtrilinos-pike12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-pike-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -802,10 +745,10 @@ Description: physics integration kernels - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-pike-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-pike12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-pike-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: physics integration kernels - development files
  Pike is a software library for coupling and solving multiphysics applications.
@@ -817,8 +760,8 @@ Description: physics integration kernels - development files
  .
  This package provides headers.
 
-Package: libtrilinos-piro12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-piro-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -834,10 +777,10 @@ Description: embedded nonlinear analysis package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-piro-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-piro12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-piro-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: embedded nonlinear analysis package - development files
  Piro is the top-level, unifying package of the Embedded Nonlinear Analysis
@@ -850,8 +793,8 @@ Description: embedded nonlinear analysis package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-pliris12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-pliris-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -863,10 +806,10 @@ Description: Trilinos dense solvers package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-pliris-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-pliris12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-pliris-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: Trilinos dense solvers package - development files
  Pliris is an object-oriented interface to a LU solver for dense matrices on
@@ -875,8 +818,8 @@ Description: Trilinos dense solvers package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-rol12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-rol-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -889,12 +832,12 @@ Description: rapid optimization library - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-rol-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-rol12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-rol-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: rapid optimization library - development files
  The Rapid Optimization Library (ROL) is a package for large-scale optimization.
@@ -904,8 +847,8 @@ Description: rapid optimization library - development files
  .
  This package provides headers.
 
-Package: libtrilinos-rtop12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-rtop-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -916,10 +859,10 @@ Description: reductions/transformation operators - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-rtop-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-rtop12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-rtop-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: reductions/transformation operators - development files
  RTOp (reduction/transformation operators) provides the basic mechanism for
@@ -927,8 +870,8 @@ Description: reductions/transformation operators - development files
  .
  This package provides headers.
 
-Package: libtrilinos-rythmos12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-rythmos-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -942,10 +885,10 @@ Description: Trilinos transient integrator - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-rythmos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-rythmos12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-rythmos-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: Trilinos transient integrator - development files
  Rythmos is a transient integrator for ordinary differential equations and
@@ -956,8 +899,8 @@ Description: Trilinos transient integrator - development files
  .
  This package provides headers.
 
-Package: libtrilinos-sacado12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-sacado-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -969,10 +912,10 @@ Description: automatic differentiation for C++ applications - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-sacado-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-sacado12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-sacado-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: automatic differentiation for C++ applications - development files
  Sacado is a set of automatic differentiation tools for C++ applications. It
@@ -981,8 +924,8 @@ Description: automatic differentiation for C++ applications - development files
  .
  This package provides headers.
 
-Package: libtrilinos-shards12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-shards-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -999,10 +942,10 @@ Description: interoperability tools for PDE solving - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-shards-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-shards12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-shards-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: interoperability tools for PDE solving - development files
  The purpose of Shards is to provide a suite of common tools for numerical and
@@ -1016,8 +959,8 @@ Description: interoperability tools for PDE solving - development files
  .
  This package provides headers.
 
-Package: libtrilinos-shylu12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-shylu-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1037,10 +980,10 @@ Description: solving sparse linear systems - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-shylu-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-shylu12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-shylu-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: solving sparse linear systems - development files
  ShyLU is a package for solving sparse linear systems. It can be used either as
@@ -1057,8 +1000,8 @@ Description: solving sparse linear systems - development files
  .
  This package provides headers.
 
-Package: libtrilinos-trilinosss12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-trilinosss-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1068,18 +1011,18 @@ Description: suitesparse with adaptations for Amesos - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-trilinosss-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-trilinosss12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-trilinosss-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: suitesparse with adaptations for Amesos - development files
  A suite of sparse matrix algorithms with adaptations for Amesos.
  .
  This package provides headers.
 
-Package: libtrilinos-stokhos12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-stokhos-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1093,12 +1036,12 @@ Description: Trilinos uncertainty quantification package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-stokhos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-stokhos12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-stokhos-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: Trilinos uncertainty quantification package - development files
  Stokhos is a package for intrusive stochastic Galerkin uncertainty
@@ -1109,8 +1052,8 @@ Description: Trilinos uncertainty quantification package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-stratimikos12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-stratimikos-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1123,12 +1066,12 @@ Description: wrappers for linear solvers and preconditioners - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-stratimikos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-stratimikos12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-stratimikos-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: wrappers for linear solvers and preconditioners - development files
  The package Stratimikos contains a unified set of Thyra-based wrappers to
@@ -1138,8 +1081,8 @@ Description: wrappers for linear solvers and preconditioners - development files
  .
  This package provides headers.
 
-Package: libtrilinos-teko12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-teko-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1159,10 +1102,10 @@ Description: block preconditioners - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-teko-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-teko12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-teko-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: block preconditioners - development files
  Teko is a package for development and implementation of block preconditioners.
@@ -1179,8 +1122,8 @@ Description: block preconditioners - development files
  .
  This package provides headers.
 
-Package: libtrilinos-teuchos12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-teuchos-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1192,10 +1135,10 @@ Description: common tools for Trilinos - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-teuchos-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: binutils-dev, libiberty-dev, libblas-dev, liblapack-dev, libtrilinos-teuchos12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: binutils-dev, libiberty-dev, libblas-dev, liblapack-dev, libtrilinos-teuchos-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: common tools for Trilinos - development files
  Teuchos provides a suite of common tools for Trilinos for developers to use.
@@ -1204,8 +1147,8 @@ Description: common tools for Trilinos - development files
  .
  This package provides headers.
 
-Package: libtrilinos-thyra12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-thyra-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1219,10 +1162,10 @@ Description: interoperability layer for numerical software - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-thyra-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-thyra12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-thyra-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: interoperability layer for numerical software - development files
  The Thyra package contains a set of interfaces and supporting code that
@@ -1233,8 +1176,8 @@ Description: interoperability layer for numerical software - development files
  .
  This package provides headers.
 
-Package: libtrilinos-tpetra12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-tpetra-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1245,10 +1188,12 @@ Description: templated numerical linear algebra package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-tpetra-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: liblapack-dev, libtbb-dev, libtrilinos-tpetra12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: liblapack-dev, libtrilinos-tpetra-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Breaks: libtrilinos-teuchos-dev (<< 13)
+Replaces: libtrilinos-teuchos-dev (<< 13)
 Suggests: trilinos-doc
 Description: templated numerical linear algebra package - development files
  Next-generation, templated version of Petra, taking advantage of the newer
@@ -1256,8 +1201,8 @@ Description: templated numerical linear algebra package - development files
  .
  This package provides headers.
 
-Package: libtrilinos-trilinoscouplings12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-trilinoscouplings-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1268,12 +1213,12 @@ Description: combining Trilinos packages - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-trilinoscouplings-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
 # Manually add libtrilinos-trilinosss-dev as dependency until
 # <https://github.com/trilinos/Trilinos/issues/2106> is resolved.
-Depends: libtrilinos-trilinoscouplings12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
+Depends: libtrilinos-trilinoscouplings-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}, libtrilinos-trilinosss-dev
 Suggests: trilinos-doc
 Description: combining Trilinos packages - development files
  TrilinosCouplings provides a location for multiple Trilinos packages to be
@@ -1281,8 +1226,8 @@ Description: combining Trilinos packages - development files
  .
  This package provides headers.
 
-Package: libtrilinos-triutils12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-triutils-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1292,18 +1237,18 @@ Description: utilities for Trilinos - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-triutils-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-triutils12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-triutils-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: utilities for Trilinos - development files
  TriUtils a package of utilities for other Trilinos packages.
  .
  This package provides headers.
 
-Package: libtrilinos-xpetra12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-xpetra-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1316,10 +1261,10 @@ Description: conversion between Epetra and Teuchos objects - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-xpetra-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-xpetra12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-xpetra-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: conversion between Epetra and Teuchos objects - development files
  Xpetra a lightweight wrapper to both Epetra and Tpetra. The Xpetra syntax
@@ -1329,8 +1274,8 @@ Description: conversion between Epetra and Teuchos objects - development files
  .
  This package provides headers.
 
-Package: libtrilinos-zoltan12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-zoltan-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1345,10 +1290,10 @@ Description: parallel dynamic load balancing - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-zoltan-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-zoltan12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-zoltan-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: parallel dynamic load balancing - development files
  Zoltan is a toolkit of parallel services for dynamic, unstructured, and/or
@@ -1360,8 +1305,8 @@ Description: parallel dynamic load balancing - development files
  .
  This package provides headers.
 
-Package: libtrilinos-zoltan2-12
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Package: libtrilinos-zoltan2-13.2
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -1373,10 +1318,10 @@ Description: Trilinos next generation load balancing package - runtime files
  This package contains the dynamic libraries.
 
 Package: libtrilinos-zoltan2-dev
-Architecture: amd64 arm64 ppc64el s390x ppc64
+Architecture: amd64 arm64 ppc64el s390x ppc64 riscv64
 Multi-Arch: same
 Section: libdevel
-Depends: libtrilinos-zoltan2-12 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
+Depends: libtrilinos-zoltan2-13.2 (= ${binary:Version}), trilinos-dev, ${misc:Depends}
 Suggests: trilinos-doc
 Description: Trilinos next generation load balancing package - development files
  Zoltan2 is a package for load balancing and combinatorial scientific

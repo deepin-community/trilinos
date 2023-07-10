@@ -17,10 +17,9 @@
 #include <cxxabi.h>
 #endif
 
-#include <boost/lexical_cast.hpp>
-
 #include <string>
 #include <iostream>
+#include <sstream>
 
 namespace percept {
 
@@ -39,8 +38,6 @@ namespace percept {
 #else
 #  define STACKTRACE_POS() do { } while(0)
 #endif
-  //#define STACKTRACE_POS_I(i) do { Stacktrace::s_position = i + boost::lexical_cast<int>(__LINE__); } while(0)
-  //#define STACKTRACE_POS() STACKTRACE_POS_I(0)
 
 class Stacktrace {
 public:
@@ -54,7 +51,7 @@ public:
 #endif
   static inline void print_stacktrace(size_t sz=10, const std::string& msg="")
   {
-    void *array[sz];
+    void **array = new void*[sz];
     size_t size;
 
     // get void*'s for all entries on the stack
@@ -64,11 +61,12 @@ public:
     fprintf(stderr, "stacktrace: message= %s:\n", msg.c_str());
     //if (!get_rank())
     backtrace_symbols_fd(array, size, 2);
+    delete [] array;
   }
 
   static inline std::string stacktrace(size_t sz=10, const std::string& msg="")
   {
-    void *array[sz];
+    void **array = new void*[sz];
     size_t size;
 
     // get void*'s for all entries on the stack
@@ -82,6 +80,7 @@ public:
         ret += std::string(syms[i])+"\n";
       }
     free(syms);
+    delete [] array;
     return ret;
   }
 
@@ -114,7 +113,7 @@ public:
 
   static inline std::string demangled_stacktrace(size_t sz=10, bool also_mangled=false, const std::string& msg="")
   {
-    void *array[sz];
+    void **array = new void*[sz];
     size_t size;
 
     // get void*'s for all entries on the stack
@@ -144,6 +143,7 @@ public:
       }
     ret += "\n";
     free(syms);
+    delete [] array;
     return ret;
   }
 

@@ -163,9 +163,12 @@ LinInterp<FROM,TO>::filter_to_nearest (
       if (topo.getKey()==shards::Particle::key) {
         dist = 0.0;
         for ( unsigned j = 0; j < nDim; ++j ) {
-          dist += std::pow(cellWorkset(0,0,j) - inputPhysicalPoints(j), 2);
+          dist += std::pow(cellWorkset(0,0,j) - inputPhysicalPoints(0,j), 2);
         }
         dist = std::sqrt(dist);
+      }
+      else if (topo.getKey()==shards::Beam<2>::key) {
+        // do nothing
       }
       else {
         Intrepid::CellTools<double>::mapToReferenceFrame(outputParametricPoints,
@@ -174,7 +177,7 @@ LinInterp<FROM,TO>::filter_to_nearest (
                                                          topo,
                                                          cellOrd);
         
-        dist = parametricDistanceToEntity(&outputParametricPoints(0), topo);
+        dist = parametricDistanceToEntity(&outputParametricPoints(0,0), topo);
       }
 
       if ( dist < (1.0 + parametric_tolerance) && dist < best_dist ) {
@@ -182,7 +185,7 @@ LinInterp<FROM,TO>::filter_to_nearest (
         best_dist = dist;
 
 	for ( unsigned j = 0; j < nDim; ++j ) {
-	  isoParCoords[j] = outputParametricPoints(j);
+	  isoParCoords[j] = outputParametricPoints(0,j);
 	}
 
         ToPoints.TransferInfo_[thePt] = isoParCoords;
@@ -340,7 +343,6 @@ LinInterp<FROM,TO>::apply_from_nodal_field (
     }
   }
 
-  Intrepid::FieldContainer<double> outVals(1, 1);
   Intrepid::FieldContainer<double> inputParametricPoints(1, nDim);
 
   inputParametricPoints.setValues(&isoParCoords[0], nDim);
@@ -349,6 +351,10 @@ LinInterp<FROM,TO>::apply_from_nodal_field (
 
   if (topo.getKey()==shards::Particle::key) {
     basisVals(0,0) = 1.0;
+  }
+  else if(topo.getKey()==shards::Beam<2>::key) {
+    basisVals(0,0) = 0.5;
+    basisVals(1,0) = 0.5;    
   }
   else {
     Teuchos::RCP<Intrepid::Basis<double, Intrepid::FieldContainer<double> > > HGRAD_Basis =

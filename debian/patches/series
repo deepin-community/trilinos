@@ -1,4 +1,4 @@
 multiarch.patch
-kokkos-header-time.patch
-kokkos-make-4.3.patch
 skip-pliris_vector_random.patch
+fix_kokkos_test_declarations.patch
+set_appropriate_soname.patch

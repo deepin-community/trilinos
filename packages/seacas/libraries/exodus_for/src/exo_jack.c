@@ -1,36 +1,9 @@
 /*
- * Copyright (c) 2005-2017-2017 National Technology & Engineering Solutions
+ * Copyright(C) 1999-2021 National Technology & Engineering Solutions
  * of Sandia, LLC (NTESS).  Under the terms of Contract DE-NA0003525 with
  * NTESS, the U.S. Government retains certain rights in this software.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *
- *     * Redistributions in binary form must reproduce the above
- *       copyright notice, this list of conditions and the following
- *       disclaimer in the documentation and/or other materials provided
- *       with the distribution.
- *
- *     * Neither the name of NTESS nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * See packages/seacas/LICENSE for details
  */
 
 /*
@@ -107,23 +80,21 @@ static void ex_fcdcpy(char *fstring, /* output string to be blank-filled */
                       int   fslen,   /* length of output string */
                       char *sstring)
 { /* input string, null-terminated */
-  int i, len;
-
   if (sstring != NULL) {
-    len = strlen(sstring);
+    int len = strlen(sstring);
     if (len > fslen) {
       len = fslen;
     }
 
-    for (i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
       *(fstring + i) = *(sstring + i);
     }
-    for (i = len; i < fslen; i++) {
+    for (int i = len; i < fslen; i++) {
       *(fstring + i) = ' ';
     }
   }
   else {
-    for (i = 0; i < fslen; i++) {
+    for (int i = 0; i < fslen; i++) {
       *(fstring + i) = ' ';
     }
   }
@@ -290,14 +261,12 @@ void F2C(exgini, EXGINI)(int *idexo, char *title, void_int *num_dim, void_int *n
                          void_int *num_elem, void_int *num_elem_blk, void_int *num_node_sets,
                          void_int *num_side_sets, int *ierr, int titlelen)
 {
-  int   slen;
-  char *name;
-
-  *ierr = 0;
-  slen  = MAX_LINE_LENGTH; /* max line size */
+  *ierr    = 0;
+  int slen = MAX_LINE_LENGTH; /* max line size */
   if (titlelen != MAX_LINE_LENGTH) {
     slen = titlelen;
   }
+  char *name;
   if (!(name = malloc((slen + 1) * sizeof(char)))) {
     *ierr = EX_MEMFAIL;
     return;
@@ -321,15 +290,13 @@ void F2C(expqa, EXPQA)(int *idexo, int *num_qa_records, char *qa_record, int *ie
   char   errmsg[MAX_ERR_LENGTH];
   char **sptr; /* internal string pointer array for malloc
                 * use */
-  int i, ii, iii, slen, alen;
+  *ierr = 0;   /* default no error */
 
-  *ierr = 0; /* default no error */
-
-  slen = MAX_STR_LENGTH; /* max str size */
+  int slen = MAX_STR_LENGTH; /* max str size */
   if (qa_recordlen != MAX_STR_LENGTH) {
     slen = qa_recordlen;
   }
-  alen = 4; /* qa records are 4 strings deep */
+  int alen = 4; /* qa records are 4 strings deep */
 
   /* Allocate space for the name ptr array */
   if (!(sptr = malloc(((*num_qa_records) * alen + 1) * sizeof(char *)))) {
@@ -341,9 +308,9 @@ void F2C(expqa, EXPQA)(int *idexo, int *num_qa_records, char *qa_record, int *ie
    * ptr into str ptr array,  and Copy Fortran qa records to staging
    * space
    */
-  iii = 0; /* offset counter */
-  for (i = 0; i < *num_qa_records; i++) {
-    for (ii = 0; ii < alen; ii++) {
+  int iii = 0; /* offset counter */
+  for (int i = 0; i < *num_qa_records; i++) {
+    for (int ii = 0; ii < alen; ii++) {
       *(sptr + iii) = malloc((slen + 1) * sizeof(char));
       if (*(sptr + iii) == 0) {
         free(sptr); /* free up array ptr space */
@@ -366,8 +333,8 @@ void F2C(expqa, EXPQA)(int *idexo, int *num_qa_records, char *qa_record, int *ie
 
   /* Free up the space we used */
   iii = 0;
-  for (i = 0; i < *num_qa_records; i++) {
-    for (ii = 0; ii < alen; ii++) {
+  for (int i = 0; i < *num_qa_records; i++) {
+    for (int ii = 0; ii < alen; ii++) {
       free(*(sptr + iii)); /* First free up string space */
       iii++;
     }
@@ -381,7 +348,6 @@ void F2C(expqa, EXPQA)(int *idexo, int *num_qa_records, char *qa_record, int *ie
  */
 void F2C(exgqa, EXGQA)(int *idexo, char *qa_record, int *ierr, int qa_recordlen)
 {
-  int    num_qa_records;
   char **sptr; /* internal string pointer array for malloc
                 * use */
   int i, ii, iii, slen, alen;
@@ -395,7 +361,7 @@ void F2C(exgqa, EXGQA)(int *idexo, char *qa_record, int *ierr, int qa_recordlen)
   alen = 4; /* qa records are 4 strings deep */
 
   /* do Exodus C call to find out how many qa records are avail */
-  num_qa_records = ex_inquire_int(*idexo, EX_INQ_QA);
+  int num_qa_records = ex_inquire_int(*idexo, EX_INQ_QA);
   if (num_qa_records < 0) {
     *ierr = EX_FATAL;
     return;
