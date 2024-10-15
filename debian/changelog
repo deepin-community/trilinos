@@ -1,3 +1,15 @@
+trilinos (13.2.0-6) unstable; urgency=medium
+
+  * Enable build on any 64-bit architecture (Closes: #1059262)
+
+ -- Graham Inggs <ginggs@debian.org>  Mon, 03 Jun 2024 09:13:57 +0000
+
+trilinos (13.2.0-5) unstable; urgency=medium
+
+  * Include missing headers to fix build with GCC-13 (Closes: #1037874)
+
+ -- Graham Inggs <ginggs@debian.org>  Mon, 04 Sep 2023 16:41:09 +0000
+
 trilinos (13.2.0-4) unstable; urgency=medium
 
   * Team upload.

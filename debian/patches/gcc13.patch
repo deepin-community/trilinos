@@ -1,0 +1,26 @@
+Description: Include missing headers to fix build with GCC-13
+Forwarded: not-needed
+Bug-Debian: https://bugs.debian.org/1037874
+Author: Graham Inggs <ginggs@debian.org>
+Last-Update: 2023-09-04
+
+--- a/packages/kokkos/core/src/impl/Kokkos_MemoryPool.cpp
++++ b/packages/kokkos/core/src/impl/Kokkos_MemoryPool.cpp
+@@ -46,6 +46,7 @@
+ 
+ #include <ostream>
+ #include <sstream>
++#include <cstdint>
+ 
+ //----------------------------------------------------------------------------
+ //----------------------------------------------------------------------------
+--- a/packages/teuchos/core/src/Teuchos_BigUIntDecl.hpp
++++ b/packages/teuchos/core/src/Teuchos_BigUIntDecl.hpp
+@@ -43,6 +43,7 @@
+ #define TEUCHOS_BIG_UINT_DECL_HPP
+ 
+ #include <iosfwd>
++#include <cstdint>
+ 
+ /*! \file Teuchos_BigUIntDecl.hpp
+     \brief Arbitrary-precision unsigned integer declaration.
